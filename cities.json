@@ -1,0 +1,102 @@
+[
+    {
+        "name": "Bangkok",
+        "lat": 13.7563,
+        "lon": 100.5018
+    },
+    {
+        "name": "Singapore",
+        "lat": 1.3521,
+        "lon": 103.8198
+    },
+    {
+        "name": "Manila",
+        "lat": 14.5995,
+        "lon": 120.9842
+    },
+    {
+        "name": "Jakarta",
+        "lat": -6.2088,
+        "lon": 106.8456
+    },
+    {
+        "name": "Ho Chi Minh City",
+        "lat": 10.8231,
+        "lon": 106.6297
+    },
+    {
+        "name": "Hanoi",
+        "lat": 21.0278,
+        "lon": 105.8342
+    },
+    {
+        "name": "Kuala Lumpur",
+        "lat": 3.1390,
+        "lon": 101.6869
+    },
+    {
+        "name": "Yangon",
+        "lat": 16.8409,
+        "lon": 96.1735
+    },
+    {
+        "name": "Phnom Penh",
+        "lat": 11.5564,
+        "lon": 104.9282
+    },
+    {
+        "name": "Vientiane",
+        "lat": 17.9757,
+        "lon": 102.6331
+    },
+    {
+        "name": "Chiang Mai",
+        "lat": 18.7883,
+        "lon": 98.9853
+    },
+    {
+        "name": "Surabaya",
+        "lat": -7.2575,
+        "lon": 112.7521
+    },
+    {
+        "name": "Bandung",
+        "lat": -6.9175,
+        "lon": 107.6191
+    },
+    {
+        "name": "Cebu City",
+        "lat": 10.3157,
+        "lon": 123.8854
+    },
+    {
+        "name": "Da Nang",
+        "lat": 16.0544,
+        "lon": 108.2022
+    },
+    {
+        "name": "George Town",
+        "lat": 5.4141,
+        "lon": 100.3288
+    },
+    {
+        "name": "Medan",
+        "lat": 3.5952,
+        "lon": 98.6722
+    },
+    {
+        "name": "Davao",
+        "lat": 7.1907,
+        "lon": 125.4553
+    },
+    {
+        "name": "Makassar",
+        "lat": -5.1477,
+        "lon": 119.4327
+    },
+    {
+        "name": "Mandalay",
+        "lat": 21.9588,
+        "lon": 96.0891
+    }
+]

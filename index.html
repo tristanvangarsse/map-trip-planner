@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet/dist/leaflet.css"
+        />
+
+        <style>
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+            }
+
+            #map {
+                height: 100%;
+                width: 100%;
+            }
+
+            .city-dot div {
+                width: 10px;
+                height: 10px;
+                background: black;
+                border-radius: 50%;
+            }
+
+            .city-label {
+                background: transparent;
+                border: none;
+                box-shadow: none;
+                color: black;
+                text-shadow:
+                    1px 1px 0 white,
+                    -1px -1px 0 white,
+                    1px -1px 0 white,
+                    -1px 1px 0 white;
+                font-size: 14px;
+                font-family: system-ui, sans-serif;
+                font-weight: 500;
+            }
+
+            .leaflet-tooltip-right:before {
+                display: none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="map"></div>
+
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+        <script>
+            const map = L.map("map", {
+                zoomControl: false,
+                scrollWheelZoom: false,
+                doubleClickZoom: false,
+                dragging: false,
+                touchZoom: false,
+                boxZoom: false,
+                keyboard: false,
+                zoomSnap: 0,
+            });
+
+            // Focus Southeast Asia
+            map.fitBounds([
+                [-11, 92],
+                [28, 141],
+            ]);
+
+            // Base physical terrain
+            const physical = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}",
+                {
+                    attribution: "Tiles © Esri",
+                    maxZoom: 10,
+                    detectRetina: true,
+                },
+            );
+
+            physical.addTo(map);
+
+            // White overlay pane (between tiles and everything else)
+            const overlayPane = map.createPane("whiteOverlay");
+            overlayPane.style.zIndex = 250;
+            overlayPane.style.pointerEvents = "none";
+
+            L.rectangle(
+                [
+                    [-90, -180],
+                    [90, 180],
+                ],
+                {
+                    pane: "whiteOverlay",
+                    stroke: false,
+                    fillColor: "#ffffff",
+                    fillOpacity: 0.32, // Adjust: 0.05–0.25
+                    interactive: false,
+                },
+            ).addTo(map);
+
+            // Country borders
+            fetch("countries.geojson")
+                .then((response) => response.json())
+                .then((data) => {
+                    L.geoJSON(data, {
+                        style: {
+                            color: "#000",
+                            weight: 1.5,
+                            fillOpacity: 0,
+                        },
+                    }).addTo(map);
+                });
+
+            // Cities
+            fetch("cities.json")
+                .then((response) => response.json())
+                .then((cities) => {
+                    cities.forEach((city) => {
+                        L.marker([city.lat, city.lon], {
+                            icon: L.divIcon({
+                                className: "city-dot",
+                                html: "<div></div>",
+                                iconSize: [10, 10],
+                            }),
+                        })
+                            .bindTooltip(city.name, {
+                                permanent: true,
+                                direction: "right",
+                                offset: [4, 0],
+                                className: "city-label",
+                            })
+                            .addTo(map);
+                    });
+                });
+        </script>
+    </body>
+</html>
