@@ -276,7 +276,7 @@ textarea:focus-visible {
 
 /* Population-density choropleth */
 .density-legend {
-    min-width: 150px;
+    min-width: 170px;
     padding: 10px 11px;
     color: var(--text);
     background: var(--card-bg);
@@ -295,6 +295,51 @@ textarea:focus-visible {
 .density-legend__unit {
     margin: 1px 0 7px;
     color: var(--muted);
+}
+
+.density-legend--local {
+    width: min(204px, calc(100vw - 26px));
+    max-height: calc(100vh - 40px);
+    overflow: auto;
+}
+
+.density-legend__status {
+    margin: 0 0 7px;
+    padding: 5px 6px;
+    color: #5c4a13;
+    background: #fff6d7;
+    border: 1px solid rgba(92, 74, 19, 0.2);
+    border-radius: 5px;
+    font-weight: 700;
+}
+
+.density-legend__status.is-detailed {
+    color: #1f5e34;
+    background: #eaf7ed;
+    border-color: rgba(31, 94, 52, 0.2);
+}
+
+.density-legend__opacity {
+    display: grid;
+    gap: 3px;
+    margin-top: 8px;
+    padding-top: 7px;
+    border-top: 1px solid rgba(18, 27, 39, 0.12);
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.density-legend__opacity input {
+    width: 100%;
+    margin: 0;
+    accent-color: #9c2554;
+}
+
+.density-legend__hint {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.35;
 }
 
 .density-legend__row {
@@ -334,10 +379,17 @@ textarea:focus-visible {
     letter-spacing: -0.02em;
 }
 
-.density-popup__indicator {
+.density-popup__indicator,
+.density-popup__resolution,
+.density-popup__position,
+.density-popup__empty {
     margin: 6px 0;
     color: var(--muted);
     font-size: 11px;
+}
+
+.density-popup__position {
+    font-variant-numeric: tabular-nums;
 }
 
 /* Map markers */

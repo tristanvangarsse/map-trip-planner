@@ -9,11 +9,17 @@
     const REGION_FILE = "data/regions/southeast-asia-countries.geojson";
     const POPULATION_DENSITY_FILE =
         "data/statistics/population-density-2023.json";
+    const WORLDPOP_DENSITY_1KM_URL =
+        "https://worldpop.arcgis.com/arcgis/rest/services/WorldPop_Population_Density_1km/ImageServer";
+    const WORLDPOP_DENSITY_100M_URL =
+        "https://worldpop.arcgis.com/arcgis/rest/services/WorldPop_Population_Density_100m/ImageServer";
+    const WORLDPOP_DENSITY_YEAR = 2020;
+    const WORLDPOP_DETAIL_ZOOM = 9;
 
     const map = L.map("map", {
         zoomControl: true,
         minZoom: 3,
-        maxZoom: 12,
+        maxZoom: 17,
         zoomSnap: 0.25,
         maxBounds: [
             [-28, 70],
@@ -25,16 +31,17 @@
     map.fitBounds(SEA_BOUNDS);
 
     L.tileLayer(
-        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}",
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
         {
             attribution: "Tiles © Esri",
-            maxZoom: 10,
+            maxZoom: 19,
+            maxNativeZoom: 19,
             detectRetina: true,
         },
     ).addTo(map);
 
     createPane("whiteOverlay", 250, "none");
-    createPane("countryBorders", 350, "none");
+    createPane("countryBorders", 525, "none");
     createPane("dataOverlay", 450, "auto");
     createPane("plannerOverlay", 650, "auto");
 
@@ -124,13 +131,24 @@
                 "Selected parks and natural areas shown by approximate centre point.",
         },
         {
+            id: "population-density-local",
+            name: "Local population density (100 m)",
+            type: "population-density-grid",
+            lowResolutionUrl: WORLDPOP_DENSITY_1KM_URL,
+            highResolutionUrl: WORLDPOP_DENSITY_100M_URL,
+            year: WORLDPOP_DENSITY_YEAR,
+            switchZoom: WORLDPOP_DETAIL_ZOOM,
+            description:
+                "Local WorldPop density estimates. The map uses a 1 km grid at regional zoom and automatically switches to a 100 m grid around towns, communes and neighbourhoods. Click the map for the estimated value.",
+        },
+        {
             id: "population-density",
-            name: "Population density (2023)",
+            name: "Country-average density (2023)",
             type: "population-density",
             file: POPULATION_DENSITY_FILE,
             regionFile: REGION_FILE,
             description:
-                "Country-level people per square kilometre of land area. Hover or click a country for its value; the legend uses a stepped scale.",
+                "Country-level World Bank average. Use the local density layer above for town, commune and neighbourhood detail.",
         },
         {
             id: "countries",
@@ -430,6 +448,244 @@
         return control;
     }
 
+    const LOCAL_DENSITY_CLASSES = [
+        { min: 0, max: 5, label: "Under 5", color: "#fff7ec" },
+        { min: 5, max: 25, label: "5–24", color: "#fee8c8" },
+        { min: 25, max: 100, label: "25–99", color: "#fdd49e" },
+        { min: 100, max: 500, label: "100–499", color: "#fdbb84" },
+        { min: 500, max: 2500, label: "500–2,499", color: "#fc8d59" },
+        { min: 2500, max: 10000, label: "2,500–9,999", color: "#ef6548" },
+        { min: 10000, max: 30000, label: "10,000–29,999", color: "#d7301f" },
+        { min: 30000, max: Infinity, label: "30,000+", color: "#7f0000" },
+    ];
+
+    const WORLDPOP_DENSITY_RENDERING_RULE = {
+        rasterFunction: "Colormap",
+        rasterFunctionArguments: {
+            Colormap: LOCAL_DENSITY_CLASSES.map((item, index) => {
+                const rgb = item.color
+                    .slice(1)
+                    .match(/.{2}/g)
+                    .map((channel) => Number.parseInt(channel, 16));
+                return [index + 1, ...rgb];
+            }),
+            Raster: {
+                rasterFunction: "Remap",
+                rasterFunctionArguments: {
+                    InputRanges: [
+                        0.000001,
+                        5,
+                        5,
+                        25,
+                        25,
+                        100,
+                        100,
+                        500,
+                        500,
+                        2500,
+                        2500,
+                        10000,
+                        10000,
+                        30000,
+                        30000,
+                        5000000,
+                    ],
+                    OutputValues: [1, 2, 3, 4, 5, 6, 7, 8],
+                    AllowUnmatched: false,
+                    Raster: "$$",
+                },
+                outputPixelType: "U8",
+            },
+        },
+        outputPixelType: "U8",
+    };
+
+    function rawPixelValue(results) {
+        const raw = results?.pixel?.properties?.value;
+        if (Array.isArray(raw)) return numericDensity(raw[0]);
+        if (typeof raw === "string" && raw.includes(",")) {
+            return numericDensity(raw.split(",")[0]);
+        }
+        return numericDensity(raw);
+    }
+
+    function buildLocalDensityPopup(results, definition, resolution) {
+        const value = rawPixelValue(results);
+        const coordinates = results?.pixel?.geometry?.coordinates;
+        const position =
+            Array.isArray(coordinates) && coordinates.length >= 2
+                ? `<div class="density-popup__position">${Number(coordinates[1]).toFixed(4)}, ${Number(coordinates[0]).toFixed(4)}</div>`
+                : "";
+
+        if (!Number.isFinite(value) || value <= 0) {
+            return `<div class="data-popup density-popup">
+                <div class="data-popup__title">Local population density</div>
+                <div class="density-popup__empty">No mapped residential population at this pixel.</div>
+                <div class="data-popup__meta">WorldPop ${escapeHtml(definition.year)} · ${escapeHtml(resolution)}</div>
+                ${position}
+            </div>`;
+        }
+
+        return `<div class="data-popup density-popup">
+            <div class="data-popup__title">Local population density</div>
+            <div class="density-popup__value">${formatDensity(value)}</div>
+            <div class="data-popup__meta">estimated people/km² · WorldPop ${escapeHtml(definition.year)}</div>
+            <div class="density-popup__resolution">Grid resolution: ${escapeHtml(resolution)}</div>
+            ${position}
+            <a class="density-popup__source" href="${escapeHtml(definition.highResolutionUrl)}" target="_blank" rel="noopener noreferrer">Open WorldPop service details</a>
+        </div>`;
+    }
+
+    function createLocalDensityLegend(definition, layer) {
+        const control = L.control({ position: "bottomleft" });
+        let container = null;
+        let status = null;
+        let zoomHandler = null;
+
+        const updateStatus = () => {
+            if (!status) return;
+            const detailed = map.getZoom() >= definition.switchZoom;
+            status.textContent = detailed
+                ? "100 m local grid active"
+                : `1 km regional grid · zoom to ${definition.switchZoom}+ for 100 m detail`;
+            status.classList.toggle("is-detailed", detailed);
+        };
+
+        control.onAdd = () => {
+            container = L.DomUtil.create(
+                "div",
+                "density-legend density-legend--local",
+            );
+            L.DomEvent.disableClickPropagation(container);
+            L.DomEvent.disableScrollPropagation(container);
+
+            const rows = LOCAL_DENSITY_CLASSES.map(
+                (item) => `<div class="density-legend__row">
+                    <span class="density-legend__swatch" style="background:${item.color}"></span>
+                    <span>${item.label}</span>
+                </div>`,
+            ).join("");
+
+            container.innerHTML = `
+                <div class="density-legend__title">Local population density</div>
+                <div class="density-legend__unit">Estimated people/km² · ${escapeHtml(definition.year)}</div>
+                <div class="density-legend__status" role="status"></div>
+                ${rows}
+                <label class="density-legend__opacity">
+                    <span>Layer opacity</span>
+                    <input type="range" min="25" max="95" value="68" step="1" aria-label="Population-density layer opacity" />
+                </label>
+                <div class="density-legend__hint">Click any visible cell for its estimate. Values are modelled grid estimates, not administrative-boundary totals.</div>
+                <a class="density-legend__source" href="${escapeHtml(definition.highResolutionUrl)}" target="_blank" rel="noopener noreferrer">Source: WorldPop / Esri</a>
+            `;
+
+            status = container.querySelector(".density-legend__status");
+            const opacity = container.querySelector(
+                ".density-legend__opacity input",
+            );
+            opacity.addEventListener("input", () => {
+                layer.setDensityOpacity(Number(opacity.value) / 100);
+            });
+
+            zoomHandler = updateStatus;
+            map.on("zoomend", zoomHandler);
+            updateStatus();
+            return container;
+        };
+
+        control.onRemove = () => {
+            if (zoomHandler) map.off("zoomend", zoomHandler);
+            zoomHandler = null;
+            container = null;
+            status = null;
+        };
+
+        return control;
+    }
+
+    function renderPopulationDensityGridOverlay(definition) {
+        if (!L.esri?.imageMapLayer) {
+            throw new Error(
+                "The local density service could not start because Esri Leaflet did not load.",
+            );
+        }
+
+        const yearStart = new Date(Date.UTC(definition.year, 0, 1));
+        const yearEnd = new Date(Date.UTC(definition.year, 11, 31, 23, 59, 59));
+        const commonOptions = {
+            pane: "dataOverlay",
+            opacity: 0.68,
+            format: "png32",
+            noData: 0,
+            from: yearStart,
+            to: yearEnd,
+            useCors: true,
+            renderingRule: WORLDPOP_DENSITY_RENDERING_RULE,
+        };
+
+        const regionalLayer = L.esri.imageMapLayer({
+            ...commonOptions,
+            url: definition.lowResolutionUrl,
+        });
+        const detailedLayer = L.esri.imageMapLayer({
+            ...commonOptions,
+            url: definition.highResolutionUrl,
+        });
+
+        regionalLayer.options.pmIgnore = true;
+        detailedLayer.options.pmIgnore = true;
+        regionalLayer.bindPopup((error, results) => {
+            if (error || !results?.pixel) return false;
+            return buildLocalDensityPopup(results, definition, "1 km");
+        });
+        detailedLayer.bindPopup((error, results) => {
+            if (error || !results?.pixel) return false;
+            return buildLocalDensityPopup(results, definition, "100 m");
+        });
+
+        const group = L.layerGroup([], { pmIgnore: true });
+        let activeResolutionLayer = null;
+
+        const syncResolution = () => {
+            if (!group._map) return;
+            const nextLayer =
+                map.getZoom() >= definition.switchZoom
+                    ? detailedLayer
+                    : regionalLayer;
+            if (nextLayer === activeResolutionLayer) return;
+            if (
+                activeResolutionLayer &&
+                group.hasLayer(activeResolutionLayer)
+            ) {
+                group.removeLayer(activeResolutionLayer);
+            }
+            group.addLayer(nextLayer);
+            activeResolutionLayer = nextLayer;
+        };
+
+        group.on("add", () => {
+            map.on("zoomend", syncResolution);
+            syncResolution();
+        });
+        group.on("remove", () => {
+            map.off("zoomend", syncResolution);
+            if (
+                activeResolutionLayer &&
+                group.hasLayer(activeResolutionLayer)
+            ) {
+                group.removeLayer(activeResolutionLayer);
+            }
+            activeResolutionLayer = null;
+        });
+
+        group.setDensityOpacity = (opacity) => {
+            regionalLayer.setOpacity(opacity);
+            detailedLayer.setOpacity(opacity);
+        };
+        group._mapDataControl = createLocalDensityLegend(definition, group);
+        return group;
+    }
+
     function renderPopulationDensityOverlay(dataset, regions, definition) {
         if (!Array.isArray(dataset?.countries)) {
             throw new Error(`${definition.file} must contain a countries array`);
@@ -608,17 +864,25 @@
             return loadedOverlays.get(definition.id);
         }
 
-        const data = await loadJson(definition.file);
         let layer;
-        if (definition.type === "points") {
-            layer = renderPointOverlay(data, definition);
-        } else if (definition.type === "geojson") {
-            layer = renderGeoJsonOverlay(data, definition);
-        } else if (definition.type === "population-density") {
-            const regions = await loadJson(definition.regionFile);
-            layer = renderPopulationDensityOverlay(data, regions, definition);
+        if (definition.type === "population-density-grid") {
+            layer = renderPopulationDensityGridOverlay(definition);
         } else {
-            throw new Error(`Unknown overlay type: ${definition.type}`);
+            const data = await loadJson(definition.file);
+            if (definition.type === "points") {
+                layer = renderPointOverlay(data, definition);
+            } else if (definition.type === "geojson") {
+                layer = renderGeoJsonOverlay(data, definition);
+            } else if (definition.type === "population-density") {
+                const regions = await loadJson(definition.regionFile);
+                layer = renderPopulationDensityOverlay(
+                    data,
+                    regions,
+                    definition,
+                );
+            } else {
+                throw new Error(`Unknown overlay type: ${definition.type}`);
+            }
         }
 
         loadedOverlays.set(definition.id, layer);
@@ -714,7 +978,10 @@
 
             appendChoice({ id: "", name: "None" });
             for (const definition of overlayDefinitions) {
-                appendChoice(definition, definition.id === "cities");
+                appendChoice(
+                    definition,
+                    definition.id === "population-density-local",
+                );
             }
 
             container.addEventListener("change", (event) => {
@@ -798,7 +1065,10 @@
                 }
             });
 
-            selectOverlay("cities", { description, error });
+            selectOverlay("population-density-local", {
+                description,
+                error,
+            });
             return container;
         },
     });

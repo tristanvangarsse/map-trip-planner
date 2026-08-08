@@ -17,21 +17,32 @@ The top-right **Map data** control shows one optional reference layer at a time:
 - ferry hubs;
 - land border crossings;
 - national parks and nature locations;
-- population density by country;
+- local population density at 1 km and 100 m resolution;
+- population density by country (legacy comparison);
 - Southeast Asian country polygons.
 
 You can also load a local JSON or GeoJSON file temporarily without editing the project.
 
-### Population-density choropleth
+### Local population density
 
-The **Population density (2023)** overlay colours each Southeast Asian country according to the number of people per square kilometre of land area.
+The default **Local population density (100 m)** overlay uses WorldPop gridded population-density estimates instead of applying one number to an entire country.
 
-- Hover over a country to see its value.
-- Click a country for a popup with the indicator, year, and source.
-- A legend appears only while this overlay is active.
-- The layer is country-level, not a detailed settlement or grid-level heatmap.
+- At regional zoom levels, the app displays the lighter 1 km WorldPop grid.
+- At zoom level 9 and above, it automatically switches to the 100 m grid for towns, communes, cities, and neighbourhoods.
+- Click any visible grid cell for its estimated people per square kilometre.
+- The legend reports which resolution is active and includes an opacity slider.
+- The map can now zoom to level 17 and uses a topographic basemap with local place labels.
 
-The values are stored in:
+The detailed layer uses WorldPop's 2020 global density services:
+
+```text
+https://worldpop.arcgis.com/arcgis/rest/services/WorldPop_Population_Density_1km/ImageServer
+https://worldpop.arcgis.com/arcgis/rest/services/WorldPop_Population_Density_100m/ImageServer
+```
+
+These are modelled raster estimates, not official commune totals or a substitute for a national census. An internet connection is required because the raster is requested from the WorldPop/Esri image services at runtime.
+
+The original **Country-average density (2023)** World Bank choropleth remains available for comparison. Its local values are stored in:
 
 ```text
 data/statistics/population-density-2023.json
@@ -118,15 +129,15 @@ There is no build step. The project is plain HTML, CSS, JavaScript, JSON, and Ge
 
 ### Root files
 
-- `index.html` loads Leaflet, Leaflet-Geoman, the stylesheet, and the application script.
+- `index.html` loads Leaflet, Esri Leaflet, Leaflet-Geoman, the stylesheet, and the application script.
 - `README.md` documents the project.
 - `.nojekyll` keeps GitHub Pages from applying Jekyll processing.
 - `.gitignore` excludes common local operating-system files.
 
 ### `assets/`
 
-- `assets/css/styles.css` contains the map controls, marker styles, planner UI, popups, and population-density legend.
-- `assets/js/app.js` contains map setup, overlay definitions, data loading, route editing, drawing tools, import/export, and browser saving.
+- `assets/css/styles.css` contains the map controls, marker styles, planner UI, popups, and both population-density legends.
+- `assets/js/app.js` contains map setup, zoom-aware WorldPop raster rendering, overlay definitions, data loading, route editing, drawing tools, import/export, and browser saving.
 
 ### `data/`
 
