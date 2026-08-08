@@ -21,7 +21,13 @@
         zoomControl: true,
         minZoom: 3,
         maxZoom: 17,
-        zoomSnap: 0.25,
+
+        // Allow smooth fractional zooming.
+        zoomSnap: 0,
+
+        // We handle trackpad/mouse zoom ourselves.
+        scrollWheelZoom: false,
+
         maxBounds: [
             [-28, 70],
             [45, 165],
@@ -30,6 +36,57 @@
     });
 
     map.fitBounds(SEA_BOUNDS);
+
+    const mapContainer = map.getContainer();
+
+    /*
+     * Custom MacBook / trackpad zoom.
+     *
+     * Increase TRACKPAD_ZOOM_SPEED if you want a stronger zoom.
+     * 0.025 = moderate
+     * 0.04  = strong
+     * 0.06  = very strong
+     */
+    const TRACKPAD_ZOOM_SPEED = 0.3;
+
+    mapContainer.addEventListener(
+        "wheel",
+        (event) => {
+            event.preventDefault();
+
+            const currentZoom = map.getZoom();
+
+            let zoomDelta;
+
+            if (event.ctrlKey) {
+                /*
+                 * macOS pinch-to-zoom.
+                 *
+                 * Pinch events usually have relatively small deltaY values,
+                 * so amplify them substantially.
+                 */
+                zoomDelta = -event.deltaY * TRACKPAD_ZOOM_SPEED;
+            } else {
+                /*
+                 * Normal two-finger vertical scrolling / mouse wheel.
+                 * Make each gesture fairly strong too.
+                 */
+                zoomDelta = -Math.sign(event.deltaY) * 0.65;
+            }
+
+            const newZoom = Math.max(
+                map.getMinZoom(),
+                Math.min(map.getMaxZoom(), currentZoom + zoomDelta),
+            );
+
+            const point = map.mouseEventToContainerPoint(event);
+
+            map.setZoomAround(point, newZoom);
+        },
+        {
+            passive: false,
+        },
+    );
 
     createPane("whiteOverlay", 250, "none");
     createPane("dataOverlay", 450, "auto");
@@ -515,22 +572,8 @@
                 rasterFunction: "Remap",
                 rasterFunctionArguments: {
                     InputRanges: [
-                        0.000001,
-                        5,
-                        5,
-                        25,
-                        25,
-                        100,
-                        100,
-                        500,
-                        500,
-                        2500,
-                        2500,
-                        10000,
-                        10000,
-                        30000,
-                        30000,
-                        5000000,
+                        0.000001, 5, 5, 25, 25, 100, 100, 500, 500, 2500, 2500,
+                        10000, 10000, 30000, 30000, 5000000,
                     ],
                     OutputValues: [1, 2, 3, 4, 5, 6, 7, 8],
                     AllowUnmatched: false,
@@ -736,7 +779,9 @@
 
     function renderPopulationDensityOverlay(dataset, regions, definition) {
         if (!Array.isArray(dataset?.countries)) {
-            throw new Error(`${definition.file} must contain a countries array`);
+            throw new Error(
+                `${definition.file} must contain a countries array`,
+            );
         }
 
         const byIso = new Map(
@@ -1282,12 +1327,7 @@
         });
     }
 
-    function addRouteStop(
-        routeId,
-        latlng,
-        properties = {},
-        options = {},
-    ) {
+    function addRouteStop(routeId, latlng, properties = {}, options = {}) {
         const route = getRoute(routeId) || getActiveRoute();
         if (!route) return null;
 
@@ -1463,11 +1503,7 @@
             (item) => item.id === selectedStopId,
         );
         const destination = index + delta;
-        if (
-            index < 0 ||
-            destination < 0 ||
-            destination >= route.stops.length
-        ) {
+        if (index < 0 || destination < 0 || destination >= route.stops.length) {
             return;
         }
         [route.stops[index], route.stops[destination]] = [
@@ -1716,11 +1752,7 @@
         }));
     }
 
-    function makeFeatureCollection(
-        features,
-        scope,
-        routesToExport = routes,
-    ) {
+    function makeFeatureCollection(features, scope, routesToExport = routes) {
         return {
             type: "FeatureCollection",
             metadata: {
@@ -1756,10 +1788,12 @@
     }
 
     function filenameSlug(value) {
-        return String(value || "route")
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "") || "route";
+        return (
+            String(value || "route")
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-|-$/g, "") || "route"
+        );
     }
 
     function clearSketches(options = {}) {
@@ -1848,7 +1882,9 @@
                     id,
                     name:
                         properties.routeName ||
-                        (id === "route-1" ? "Trip route" : `Route ${index + 1}`),
+                        (id === "route-1"
+                            ? "Trip route"
+                            : `Route ${index + 1}`),
                     color: properties.routeColor,
                     dark: properties.routeColorDark,
                     colorIndex: Number.isFinite(
@@ -1856,7 +1892,8 @@
                     )
                         ? Number(properties.routeColorIndex)
                         : descriptors.size,
-                    order: Number(properties.routeOrder) || descriptors.size + 1,
+                    order:
+                        Number(properties.routeOrder) || descriptors.size + 1,
                 });
             }
         });
@@ -2190,14 +2227,15 @@
                 const route = getActiveRoute();
                 if (!route) return;
                 downloadGeoJson(
-                    makeFeatureCollection(
-                        routeFeatures([route]),
-                        "route",
-                        [route],
-                    ),
+                    makeFeatureCollection(routeFeatures([route]), "route", [
+                        route,
+                    ]),
                     `${filenameSlug(routeDisplayName(route))}-${dateStamp()}.geojson`,
                 );
-                setPlannerMessage("Active route GeoJSON downloaded.", "success");
+                setPlannerMessage(
+                    "Active route GeoJSON downloaded.",
+                    "success",
+                );
             });
 
             plannerUi.stopName.addEventListener("input", () => {
