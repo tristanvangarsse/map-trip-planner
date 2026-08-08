@@ -1,9 +1,9 @@
 (() => {
     "use strict";
 
-    const SEA_BOUNDS = [
-        [-12, 91],
-        [29, 142],
+    const WORLD_BOUNDS = [
+        [-85, -180],
+        [85, 180],
     ];
     const STORAGE_KEY = "southeast-asia-trip-workspace-v3";
     const LEGACY_STORAGE_KEY = "southeast-asia-trip-workspace-v2";
@@ -27,15 +27,9 @@
 
         // We handle trackpad/mouse zoom ourselves.
         scrollWheelZoom: false,
-
-        maxBounds: [
-            [-28, 70],
-            [45, 165],
-        ],
-        maxBoundsViscosity: 0.65,
     });
 
-    map.fitBounds(SEA_BOUNDS);
+    map.fitBounds(WORLD_BOUNDS);
 
     const mapContainer = map.getContainer();
 
@@ -94,31 +88,15 @@
     createPane("placeLabels", 575, "none");
     createPane("plannerOverlay", 650, "auto");
 
-    const cartoAttribution =
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
-    const cartoTileOptions = {
-        subdomains: "abcd",
-        maxZoom: 20,
-        maxNativeZoom: 20,
-    };
+    const MAPTILER_KEY = "RSWEPIlphlOYEIOQMKPb";
 
-    L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
-        {
-            ...cartoTileOptions,
-            attribution: cartoAttribution,
-        },
-    ).addTo(map);
-
-    L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
-        {
-            ...cartoTileOptions,
-            pane: "placeLabels",
-            attribution: "",
-            interactive: false,
-        },
-    ).addTo(map);
+    L.maptiler
+        .maptilerLayer({
+            apiKey: MAPTILER_KEY,
+            style: `https://api.maptiler.com/maps/019fe1ad-b189-77fc-b231-40d53fc9ec1e/style.json?key=${MAPTILER_KEY}`,
+            language: L.maptiler.Language.ENGLISH,
+        })
+        .addTo(map);
 
     L.rectangle(
         [
@@ -241,24 +219,21 @@
                 };
             },
         },
-    ];
-
-    loadJson(REGION_FILE)
-        .then((data) => {
-            L.geoJSON(data, {
-                pane: "countryBorders",
-                interactive: false,
-                style: {
+        {
+            id: "country-borders",
+            name: "Country borders",
+            type: "geojson",
+            file: REGION_FILE,
+            description: "Black country outlines.",
+            style() {
+                return {
                     color: "#111820",
                     weight: 1,
                     fillOpacity: 0,
-                },
-                onEachFeature(_feature, layer) {
-                    layer.options.pmIgnore = true;
-                },
-            }).addTo(map);
-        })
-        .catch((error) => console.error(error));
+                };
+            },
+        },
+    ];
 
     function createPane(name, zIndex, pointerEvents) {
         const pane = map.createPane(name);
@@ -1112,10 +1087,7 @@
                 return input;
             };
 
-            const defaultOverlayIds = new Set([
-                "cities",
-                "population-density-local",
-            ]);
+            const defaultOverlayIds = new Set();
             const defaultInputs = [];
             for (const definition of overlayDefinitions) {
                 const checked = defaultOverlayIds.has(definition.id);
@@ -1321,9 +1293,9 @@
         return L.divIcon({
             className: "route-stop-wrapper",
             html: `<span class="route-stop-icon${selected ? " is-selected" : ""}" style="--route-color:${route.color};--route-color-dark:${route.dark}">${number}</span>`,
-            iconSize: [30, 30],
-            iconAnchor: [15, 15],
-            popupAnchor: [0, -16],
+            iconSize: [10, 10],
+            iconAnchor: [5, 5],
+            popupAnchor: [0, -11],
         });
     }
 
@@ -1352,7 +1324,12 @@
             L.DomEvent.stopPropagation(event);
             selectRouteStop(route.id, stop.id);
         });
-        marker.on("drag", () => updateRouteGeometry(route));
+        marker.on("drag", () => {
+            route.line.setLatLngs(
+                route.stops.map((stop) => stop.marker.getLatLng()),
+            );
+        });
+
         marker.on("dragend", () => {
             updateRouteGeometry(route);
             schedulePersist();

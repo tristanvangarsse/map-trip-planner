@@ -273,7 +273,6 @@ textarea:focus-visible {
     font-weight: 650;
 }
 
-
 /* Population-density choropleth */
 .density-legend {
     min-width: 170px;
@@ -436,7 +435,6 @@ textarea:focus-visible {
     line-height: 1;
 }
 
-
 .data-popup {
     min-width: 190px;
     line-height: 1.35;
@@ -595,8 +593,8 @@ textarea:focus-visible {
 .route-stop-wrapper .route-stop-icon {
     display: grid;
     place-items: center;
-    width: 28px !important;
-    height: 28px !important;
+    width: 18px !important;
+    height: 18px !important;
     color: #fff;
     background: var(--route-color);
     border: 2px solid #fff;
