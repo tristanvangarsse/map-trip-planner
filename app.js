@@ -1148,14 +1148,17 @@
         options: { position: "bottomright" },
 
         onAdd() {
-            const container = L.DomUtil.create("div", "planner-panel");
+            const container = L.DomUtil.create(
+                "div",
+                "planner-panel planner-panel--collapsed",
+            );
             L.DomEvent.disableClickPropagation(container);
             L.DomEvent.disableScrollPropagation(container);
 
             container.innerHTML = `
                 <div class="control-heading">
                     <div class="control-title">Trip planner</div>
-                    <button class="control-collapse" type="button" aria-label="Collapse trip planner" aria-expanded="true">−</button>
+                    <button class="control-collapse" type="button" aria-label="Expand trip planner" aria-expanded="false">+</button>
                 </div>
                 <div class="planner-body">
                     <section class="planner-section">
