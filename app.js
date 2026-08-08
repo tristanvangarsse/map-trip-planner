@@ -205,14 +205,14 @@
             Brunei: "#ffb300",
             Cambodia: "#ff3300",
             Indonesia: "#00ff66",
-            Laos: "#6600ff",
-            Malaysia: "#00a2ff",
+            Laos: "#ffe600",
+            Malaysia: "#8c00ff",
             Myanmar: "#ff9100",
-            Philippines: "#fd004c",
+            Philippines: "#fd0098",
             Singapore: "#73ff00",
-            Thailand: "#ff0088",
+            Thailand: "#0400ff",
             "East Timor": "#fffb00",
-            Vietnam: "#54a5a5",
+            Vietnam: "#00fcfc",
         };
 
         return countryColors[name] || "#999999";
