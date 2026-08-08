@@ -1731,7 +1731,7 @@
         return {
             type: "FeatureCollection",
             metadata: {
-                application: "Southeast Asia trip planner",
+                application: "Map trip planner",
                 version: 3,
                 scope,
                 exportedAt: new Date().toISOString(),

@@ -1,8 +1,8 @@
-# Southeast Asia Map & Trip Planner
+# World Map & Trip Planner
 
-A static Leaflet website for exploring Southeast Asia, comparing travel-related reference data, and sketching an itinerary directly in the browser.
+A static Leaflet website for exploring the world, comparing travel-related reference data, and sketching an itinerary directly in the browser.
 
-**Live website:** https://southeast-asia-map.vangarsse.com
+**Live website:** https://map.vangarsse.com
 
 ## Features
 
@@ -19,7 +19,7 @@ The top-right **Map data** control starts collapsed. Expand it to turn any combi
 - national parks and nature locations;
 - local population density at 1 km and 100 m resolution;
 - population density by country (legacy comparison);
-- Southeast Asian country polygons.
+- country polygons.
 
 Several layers can remain visible together, and each one can be disabled without affecting the others. You can also load a local JSON or GeoJSON file temporarily without editing the project.
 

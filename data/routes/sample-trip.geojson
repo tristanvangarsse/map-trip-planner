@@ -1,7 +1,7 @@
 {
   "type": "FeatureCollection",
   "metadata": {
-    "application": "Southeast Asia trip planner",
+    "application": "Map trip planner",
     "scope": "workspace",
     "routeDistanceIsStraightLine": true
   },
