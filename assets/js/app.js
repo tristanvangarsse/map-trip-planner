@@ -1349,8 +1349,8 @@
         );
         route.line.setStyle({
             color: route.color,
-            weight: active ? 2.5 : 1.5,
-            opacity: active ? 0.95 : 0.68,
+            weight: 1.5,
+            opacity: 0.9,
         });
 
         route.stops.forEach((stop, index) => {

@@ -592,10 +592,9 @@ textarea:focus-visible {
 
 .route-stop-icon {
     display: block;
-    width: 8px;
-    height: 8px;
+    width: 5px;
+    height: 5px;
     background: var(--route-color);
-    border-radius: 50%;
 }
 
 .route-stop-icon.is-selected {
