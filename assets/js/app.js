@@ -1258,9 +1258,8 @@
         const line = L.polyline([], {
             pane: "plannerOverlay",
             color,
-            weight: 4,
+            weight: 2,
             opacity: 0.85,
-            dashArray: "10 7",
             lineCap: "round",
             lineJoin: "round",
             interactive: false,
@@ -1292,10 +1291,9 @@
     function makeStopIcon(route, number, selected = false) {
         return L.divIcon({
             className: "route-stop-wrapper",
-            html: `<span class="route-stop-icon${selected ? " is-selected" : ""}" style="--route-color:${route.color};--route-color-dark:${route.dark}">${number}</span>`,
-            iconSize: [10, 10],
-            iconAnchor: [5, 5],
-            popupAnchor: [0, -11],
+            html: `<span class="route-stop-icon" style="--route-color:${route.color}"></span>`,
+            iconSize: [8, 8],
+            iconAnchor: [4, 4],
         });
     }
 
@@ -1351,7 +1349,7 @@
         );
         route.line.setStyle({
             color: route.color,
-            weight: active ? 5 : 3.5,
+            weight: active ? 2.5 : 1.5,
             opacity: active ? 0.95 : 0.68,
         });
 
