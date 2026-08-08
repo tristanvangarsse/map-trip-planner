@@ -6,9 +6,9 @@ A static Leaflet website for exploring Southeast Asia, comparing travel-related 
 
 ## Features
 
-### Selectable map overlays
+### Independent map overlays
 
-The top-right **Map data** control shows one optional reference layer at a time:
+The top-right **Map data** control starts collapsed. Expand it to turn any combination of reference layers on or off independently:
 
 - major cities;
 - vegan-friendly city shortlist;
@@ -21,7 +21,9 @@ The top-right **Map data** control shows one optional reference layer at a time:
 - population density by country (legacy comparison);
 - Southeast Asian country polygons.
 
-You can also load a local JSON or GeoJSON file temporarily without editing the project.
+Several layers can remain visible together, and each one can be disabled without affecting the others. You can also load a local JSON or GeoJSON file temporarily without editing the project.
+
+Population-density legends start collapsed and can be expanded when needed.
 
 ### Local population density
 
@@ -31,7 +33,7 @@ The default **Local population density (100 m)** overlay uses WorldPop gridded p
 - At zoom level 9 and above, it automatically switches to the 100 m grid for towns, communes, cities, and neighbourhoods.
 - Click any visible grid cell for its estimated people per square kilometre.
 - The legend reports which resolution is active and includes an opacity slider.
-- The map can now zoom to level 17 and uses a topographic basemap with local place labels.
+- The map can zoom to level 17 and uses CARTO Voyager map tiles based on OpenStreetMap data. Place labels are rendered in their own pane above reference layers so city and town names remain readable.
 
 The detailed layer uses WorldPop's 2020 global density services:
 
@@ -56,19 +58,21 @@ https://data.worldbank.org/indicator/EN.POP.DNST
 
 The bottom-right trip planner starts collapsed. Expand it to:
 
+- keep multiple routes visible on the same map;
+- create new routes with automatically contrasting colours;
+- switch, rename, clear, or delete an active route;
 - add numbered route stops by clicking the map;
 - drag stops to reposition them;
 - rename stops and add notes;
 - reorder or remove stops;
-- connect stops automatically with a route line;
 - draw extra markers, lines, rectangles, and polygons;
 - edit or delete drawn geometry;
 - import GeoJSON;
-- export only the route or the complete workspace as GeoJSON.
+- export the active route or the complete multi-route workspace as GeoJSON.
 
-The route is a straight-line itinerary. It does not calculate road, rail, ferry, or flight paths.
+Each route is a straight-line itinerary. The app does not calculate road, rail, ferry, or flight paths.
 
-The workspace is automatically saved in the browser using `localStorage`.
+The complete workspace is automatically saved in the browser using `localStorage`. Version 2 single-route browser saves and exports are migrated when loaded.
 
 ## Run locally
 
@@ -137,7 +141,7 @@ There is no build step. The project is plain HTML, CSS, JavaScript, JSON, and Ge
 ### `assets/`
 
 - `assets/css/styles.css` contains the map controls, marker styles, planner UI, popups, and both population-density legends.
-- `assets/js/app.js` contains map setup, zoom-aware WorldPop raster rendering, overlay definitions, data loading, route editing, drawing tools, import/export, and browser saving.
+- `assets/js/app.js` contains map setup, label-rich basemap rendering, zoom-aware WorldPop rasters, independently toggled overlays, multi-route editing, drawing tools, import/export, and browser saving.
 
 ### `data/`
 
@@ -307,4 +311,4 @@ The query strings on the local CSS and JavaScript references in `index.html` are
 
 Add a code license before presenting the repository as generally reusable.
 
-Keep attribution and usage terms for external map tiles and datasets. The map currently displays Esri attribution, and the population-density dataset records its World Bank source in the data file and interface.
+Keep attribution and usage terms for external map tiles and datasets. The basemap displays OpenStreetMap and CARTO attribution. The local density layer identifies WorldPop/Esri, and the country-level density file records its World Bank source.

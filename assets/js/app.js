@@ -5,7 +5,8 @@
         [-12, 91],
         [29, 142],
     ];
-    const STORAGE_KEY = "southeast-asia-trip-workspace-v2";
+    const STORAGE_KEY = "southeast-asia-trip-workspace-v3";
+    const LEGACY_STORAGE_KEY = "southeast-asia-trip-workspace-v2";
     const REGION_FILE = "data/regions/southeast-asia-countries.geojson";
     const POPULATION_DENSITY_FILE =
         "data/statistics/population-density-2023.json";
@@ -30,20 +31,37 @@
 
     map.fitBounds(SEA_BOUNDS);
 
+    createPane("whiteOverlay", 250, "none");
+    createPane("dataOverlay", 450, "auto");
+    createPane("countryBorders", 525, "none");
+    createPane("placeLabels", 575, "none");
+    createPane("plannerOverlay", 650, "auto");
+
+    const cartoAttribution =
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+    const cartoTileOptions = {
+        subdomains: "abcd",
+        maxZoom: 20,
+        maxNativeZoom: 20,
+    };
+
     L.tileLayer(
-        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
         {
-            attribution: "Tiles © Esri",
-            maxZoom: 19,
-            maxNativeZoom: 19,
-            detectRetina: true,
+            ...cartoTileOptions,
+            attribution: cartoAttribution,
         },
     ).addTo(map);
 
-    createPane("whiteOverlay", 250, "none");
-    createPane("countryBorders", 525, "none");
-    createPane("dataOverlay", 450, "auto");
-    createPane("plannerOverlay", 650, "auto");
+    L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
+        {
+            ...cartoTileOptions,
+            pane: "placeLabels",
+            attribution: "",
+            interactive: false,
+        },
+    ).addTo(map);
 
     L.rectangle(
         [
@@ -62,9 +80,8 @@
 
     const jsonCache = new Map();
     const loadedOverlays = new Map();
-    let activeOverlay = null;
-    let activeOverlayControl = null;
-    let overlaySelectionSerial = 0;
+    const activeOverlays = new Map();
+    const overlayToggleSerials = new Map();
 
     const overlayDefinitions = [
         {
@@ -421,10 +438,29 @@
         </div>`;
     }
 
+    function enableLegendCollapse(container) {
+        const button = container.querySelector(".density-legend__collapse");
+        if (!button) return;
+        button.addEventListener("click", () => {
+            const collapsed = container.classList.toggle(
+                "density-legend--collapsed",
+            );
+            button.textContent = collapsed ? "+" : "−";
+            button.setAttribute("aria-expanded", String(!collapsed));
+            button.setAttribute(
+                "aria-label",
+                collapsed ? "Expand map legend" : "Collapse map legend",
+            );
+        });
+    }
+
     function createPopulationDensityLegend(dataset) {
         const control = L.control({ position: "bottomleft" });
         control.onAdd = () => {
-            const container = L.DomUtil.create("div", "density-legend");
+            const container = L.DomUtil.create(
+                "div",
+                "density-legend density-legend--collapsed",
+            );
             L.DomEvent.disableClickPropagation(container);
             L.DomEvent.disableScrollPropagation(container);
 
@@ -438,11 +474,17 @@
             const source = escapeHtml(dataset.source || "World Bank Open Data");
 
             container.innerHTML = `
-                <div class="density-legend__title">Population density</div>
-                <div class="density-legend__unit">People/km² · ${escapeHtml(dataset.year || "")}</div>
-                ${rows}
-                ${sourceUrl ? `<a class="density-legend__source" href="${sourceUrl}" target="_blank" rel="noopener noreferrer">Source: ${source}</a>` : ""}
+                <div class="density-legend__heading">
+                    <div class="density-legend__title">Population density</div>
+                    <button class="control-collapse density-legend__collapse" type="button" aria-label="Expand map legend" aria-expanded="false">+</button>
+                </div>
+                <div class="density-legend__body">
+                    <div class="density-legend__unit">People/km² · ${escapeHtml(dataset.year || "")}</div>
+                    ${rows}
+                    ${sourceUrl ? `<a class="density-legend__source" href="${sourceUrl}" target="_blank" rel="noopener noreferrer">Source: ${source}</a>` : ""}
+                </div>
             `;
+            enableLegendCollapse(container);
             return container;
         };
         return control;
@@ -554,7 +596,7 @@
         control.onAdd = () => {
             container = L.DomUtil.create(
                 "div",
-                "density-legend density-legend--local",
+                "density-legend density-legend--local density-legend--collapsed",
             );
             L.DomEvent.disableClickPropagation(container);
             L.DomEvent.disableScrollPropagation(container);
@@ -567,18 +609,24 @@
             ).join("");
 
             container.innerHTML = `
-                <div class="density-legend__title">Local population density</div>
-                <div class="density-legend__unit">Estimated people/km² · ${escapeHtml(definition.year)}</div>
-                <div class="density-legend__status" role="status"></div>
-                ${rows}
-                <label class="density-legend__opacity">
-                    <span>Layer opacity</span>
-                    <input type="range" min="25" max="95" value="68" step="1" aria-label="Population-density layer opacity" />
-                </label>
-                <div class="density-legend__hint">Click any visible cell for its estimate. Values are modelled grid estimates, not administrative-boundary totals.</div>
-                <a class="density-legend__source" href="${escapeHtml(definition.highResolutionUrl)}" target="_blank" rel="noopener noreferrer">Source: WorldPop / Esri</a>
+                <div class="density-legend__heading">
+                    <div class="density-legend__title">Local population density</div>
+                    <button class="control-collapse density-legend__collapse" type="button" aria-label="Expand map legend" aria-expanded="false">+</button>
+                </div>
+                <div class="density-legend__body">
+                    <div class="density-legend__unit">Estimated people/km² · ${escapeHtml(definition.year)}</div>
+                    <div class="density-legend__status" role="status"></div>
+                    ${rows}
+                    <label class="density-legend__opacity">
+                        <span>Layer opacity</span>
+                        <input type="range" min="25" max="95" value="68" step="1" aria-label="Population-density layer opacity" />
+                    </label>
+                    <div class="density-legend__hint">Click any visible cell for its estimate. Values are modelled grid estimates, not administrative-boundary totals.</div>
+                    <a class="density-legend__source" href="${escapeHtml(definition.highResolutionUrl)}" target="_blank" rel="noopener noreferrer">Source: WorldPop / Esri</a>
+                </div>
             `;
 
+            enableLegendCollapse(container);
             status = container.querySelector(".density-legend__status");
             const opacity = container.querySelector(
                 ".density-legend__opacity input",
@@ -889,46 +937,67 @@
         return layer;
     }
 
-    async function selectOverlay(id, ui) {
-        const serial = ++overlaySelectionSerial;
-
-        if (activeOverlay) {
-            map.removeLayer(activeOverlay);
-            activeOverlay = null;
-        }
-        if (activeOverlayControl) {
-            map.removeControl(activeOverlayControl);
-            activeOverlayControl = null;
-        }
-
-        ui.error.textContent = "";
-        if (!id) {
-            ui.description.textContent = "No optional dataset is visible.";
+    function updateOverlayPanelStatus(ui, latestDefinition = null) {
+        const visibleDefinitions = overlayDefinitions.filter((definition) =>
+            activeOverlays.has(definition.id),
+        );
+        if (!visibleDefinitions.length) {
+            ui.description.textContent = "No reference layers are visible.";
             return;
         }
 
+        const countText = `${visibleDefinitions.length} ${visibleDefinitions.length === 1 ? "layer" : "layers"} visible.`;
+        ui.description.textContent = latestDefinition?.description
+            ? `${countText} ${latestDefinition.description}`
+            : countText;
+    }
+
+    async function setOverlayEnabled(id, enabled, ui, input = null) {
+        const serial = (overlayToggleSerials.get(id) || 0) + 1;
+        overlayToggleSerials.set(id, serial);
         const definition = overlayDefinitions.find((item) => item.id === id);
         if (!definition) return;
 
+        ui.error.textContent = "";
+        if (!enabled) {
+            const active = activeOverlays.get(id);
+            if (active) {
+                if (active.control) map.removeControl(active.control);
+                if (map.hasLayer(active.layer)) map.removeLayer(active.layer);
+                activeOverlays.delete(id);
+            }
+            updateOverlayPanelStatus(ui, definition);
+            return;
+        }
+
+        if (activeOverlays.has(id)) {
+            updateOverlayPanelStatus(ui, definition);
+            return;
+        }
+
+        if (input) input.disabled = true;
         ui.description.textContent = `Loading ${definition.name}…`;
         try {
             const layer = await loadOverlay(definition);
-            if (serial !== overlaySelectionSerial) return;
-            layer.addTo(map);
-            activeOverlay = layer;
-            if (layer._mapDataControl) {
-                layer._mapDataControl.addTo(map);
-                activeOverlayControl = layer._mapDataControl;
+            if (
+                overlayToggleSerials.get(id) !== serial ||
+                (input && !input.checked)
+            ) {
+                return;
             }
-            ui.description.textContent = definition.description || "";
+
+            layer.addTo(map);
+            const control = layer._mapDataControl || null;
+            if (control) control.addTo(map);
+            activeOverlays.set(id, { layer, control });
+            updateOverlayPanelStatus(ui, definition);
         } catch (error) {
             console.error(error);
+            if (input) input.checked = false;
             ui.error.textContent = error.message;
-            ui.description.textContent = "The dataset could not be displayed.";
-            const none = document.querySelector(
-                'input[name="data-overlay"][value=""]',
-            );
-            if (none) none.checked = true;
+            ui.description.textContent = `${definition.name} could not be displayed.`;
+        } finally {
+            if (input) input.disabled = false;
         }
     }
 
@@ -936,22 +1005,29 @@
         options: { position: "topright" },
 
         onAdd() {
-            const container = L.DomUtil.create("div", "overlay-picker");
+            const container = L.DomUtil.create(
+                "div",
+                "overlay-picker overlay-picker--collapsed",
+            );
             L.DomEvent.disableClickPropagation(container);
             L.DomEvent.disableScrollPropagation(container);
 
             container.innerHTML = `
                 <div class="control-heading">
                     <div class="control-title">Map data</div>
+                    <button class="control-collapse" type="button" aria-label="Expand map data" aria-expanded="false">+</button>
                 </div>
-                <p class="control-subtitle">Choose one reference layer.</p>
-                <div class="overlay-picker__choices"></div>
-                <button class="overlay-picker__load" type="button">Load local JSON / GeoJSON…</button>
-                <input class="overlay-picker__file" type="file" accept=".json,.geojson,application/json,application/geo+json" hidden />
-                <div class="overlay-picker__description"></div>
-                <div class="overlay-picker__error" role="alert"></div>
+                <div class="overlay-picker__body">
+                    <p class="control-subtitle">Turn reference layers on or off independently.</p>
+                    <div class="overlay-picker__choices"></div>
+                    <button class="overlay-picker__load" type="button">Load local JSON / GeoJSON…</button>
+                    <input class="overlay-picker__file" type="file" accept=".json,.geojson,application/json,application/geo+json" hidden />
+                    <div class="overlay-picker__description"></div>
+                    <div class="overlay-picker__error" role="alert"></div>
+                </div>
             `;
 
+            const collapse = container.querySelector(".control-collapse");
             const choicesElement = container.querySelector(
                 ".overlay-picker__choices",
             );
@@ -961,32 +1037,55 @@
                 ".overlay-picker__description",
             );
             const error = container.querySelector(".overlay-picker__error");
+            const ui = { description, error };
+
+            collapse.addEventListener("click", () => {
+                const collapsed = container.classList.toggle(
+                    "overlay-picker--collapsed",
+                );
+                collapse.textContent = collapsed ? "+" : "−";
+                collapse.setAttribute("aria-expanded", String(!collapsed));
+                collapse.setAttribute(
+                    "aria-label",
+                    collapsed ? "Expand map data" : "Collapse map data",
+                );
+            });
 
             const appendChoice = (choice, checked = false) => {
                 const label = document.createElement("label");
                 const input = document.createElement("input");
                 const text = document.createElement("span");
-                input.type = "radio";
+                input.type = "checkbox";
                 input.name = "data-overlay";
                 input.value = choice.id;
                 input.checked = checked;
+                input.setAttribute("aria-label", choice.name || choice.id);
                 text.textContent = choice.name || choice.id;
+                if (choice.description) label.title = choice.description;
                 label.append(input, text);
                 choicesElement.append(label);
                 return input;
             };
 
-            appendChoice({ id: "", name: "None" });
+            const defaultOverlayIds = new Set([
+                "cities",
+                "population-density-local",
+            ]);
+            const defaultInputs = [];
             for (const definition of overlayDefinitions) {
-                appendChoice(
-                    definition,
-                    definition.id === "population-density-local",
-                );
+                const checked = defaultOverlayIds.has(definition.id);
+                const input = appendChoice(definition, checked);
+                if (checked) defaultInputs.push([definition.id, input]);
             }
 
             container.addEventListener("change", (event) => {
                 if (event.target?.name === "data-overlay") {
-                    selectOverlay(event.target.value, { description, error });
+                    setOverlayEnabled(
+                        event.target.value,
+                        event.target.checked,
+                        ui,
+                        event.target,
+                    );
                 }
             });
 
@@ -1054,8 +1153,7 @@
                     overlayDefinitions.push(definition);
                     loadedOverlays.set(id, layer);
                     const input = appendChoice(definition, true);
-                    input.checked = true;
-                    await selectOverlay(id, { description, error });
+                    await setOverlayEnabled(id, true, ui, input);
                 } catch (loadError) {
                     console.error(loadError);
                     error.textContent =
@@ -1065,56 +1163,136 @@
                 }
             });
 
-            selectOverlay("population-density-local", {
-                description,
-                error,
-            });
+            updateOverlayPanelStatus(ui);
+            for (const [id, input] of defaultInputs) {
+                setOverlayEnabled(id, true, ui, input);
+            }
             return container;
         },
     });
 
     map.addControl(new OverlayPicker());
 
-    /* Trip route and sketch workspace */
-    const routeGroup = L.featureGroup([], { pmIgnore: true }).addTo(map);
-    const routeLine = L.polyline([], {
-        pane: "plannerOverlay",
-        color: "#9c2554",
-        weight: 4,
-        opacity: 0.9,
-        dashArray: "10 7",
-        lineCap: "round",
-        lineJoin: "round",
-        interactive: false,
-        pmIgnore: true,
-    }).addTo(routeGroup);
+    /* Trip routes and sketch workspace */
+    const ROUTE_PALETTE = [
+        { color: "#d81b60", dark: "#8a103a" },
+        { color: "#1565c0", dark: "#0c3d78" },
+        { color: "#ef6c00", dark: "#914100" },
+        { color: "#2e7d32", dark: "#174b1b" },
+        { color: "#7b1fa2", dark: "#48125e" },
+        { color: "#00838f", dark: "#004d54" },
+        { color: "#c62828", dark: "#761616" },
+        { color: "#6d4c41", dark: "#3e2923" },
+        { color: "#827717", dark: "#4f480d" },
+        { color: "#3949ab", dark: "#202a68" },
+    ];
+
+    const routesGroup = L.featureGroup([], { pmIgnore: true }).addTo(map);
     const sketchGroup = L.featureGroup().addTo(map);
 
-    let routeStops = [];
+    let routes = [];
+    let activeRouteId = null;
     let selectedStopId = null;
     let addingStops = false;
     let restoreInProgress = false;
     let persistTimer = null;
     let plannerUi = null;
+    let routeColorCursor = 0;
 
-    function makeId() {
+    function makeId(prefix = "item") {
         if (globalThis.crypto?.randomUUID) return crypto.randomUUID();
-        return `stop-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     }
 
-    function makeStopIcon(number, selected = false) {
+    function generatedRouteStyle(index) {
+        if (index < ROUTE_PALETTE.length) return ROUTE_PALETTE[index];
+        const hue = Math.round((index * 137.508 + 330) % 360);
+        return {
+            color: `hsl(${hue}, 72%, 42%)`,
+            dark: `hsl(${hue}, 72%, 25%)`,
+        };
+    }
+
+    function routeDisplayName(route, fallbackIndex = null) {
+        const index =
+            fallbackIndex === null ? routes.indexOf(route) : fallbackIndex;
+        return route?.name?.trim() || `Route ${Math.max(0, index) + 1}`;
+    }
+
+    function getRoute(id) {
+        return routes.find((route) => route.id === id) || null;
+    }
+
+    function getActiveRoute() {
+        return getRoute(activeRouteId) || routes[0] || null;
+    }
+
+    function createRoute(properties = {}, options = {}) {
+        const requestedIndex = Number(properties.colorIndex);
+        const colorIndex = Number.isInteger(requestedIndex)
+            ? requestedIndex
+            : routeColorCursor;
+        const generated = generatedRouteStyle(colorIndex);
+        const color = properties.color || generated.color;
+        const dark = properties.dark || generated.dark;
+        routeColorCursor = Math.max(routeColorCursor, colorIndex + 1);
+
+        const group = L.featureGroup([], { pmIgnore: true }).addTo(routesGroup);
+        const line = L.polyline([], {
+            pane: "plannerOverlay",
+            color,
+            weight: 4,
+            opacity: 0.85,
+            dashArray: "10 7",
+            lineCap: "round",
+            lineJoin: "round",
+            interactive: false,
+            pmIgnore: true,
+        }).addTo(group);
+
+        const route = {
+            id: properties.id || makeId("route"),
+            name: properties.name || `Route ${routes.length + 1}`,
+            color,
+            dark,
+            colorIndex,
+            group,
+            line,
+            stops: [],
+        };
+        routes.push(route);
+
+        if (options.activate !== false) {
+            activeRouteId = route.id;
+            selectedStopId = null;
+        }
+        updateAllRouteGeometry();
+        syncRouteControls();
+        if (options.persist !== false) schedulePersist();
+        return route;
+    }
+
+    function makeStopIcon(route, number, selected = false) {
         return L.divIcon({
-            className: `route-stop-icon${selected ? " is-selected" : ""}`,
-            html: `<span>${number}</span>`,
-            iconSize: [28, 28],
-            iconAnchor: [14, 14],
-            popupAnchor: [0, -15],
+            className: "route-stop-wrapper",
+            html: `<span class="route-stop-icon${selected ? " is-selected" : ""}" style="--route-color:${route.color};--route-color-dark:${route.dark}">${number}</span>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+            popupAnchor: [0, -16],
         });
     }
 
-    function addRouteStop(latlng, properties = {}, options = {}) {
+    function addRouteStop(
+        routeId,
+        latlng,
+        properties = {},
+        options = {},
+    ) {
+        const route = getRoute(routeId) || getActiveRoute();
+        if (!route) return null;
+
         const stop = {
-            id: properties.id || makeId(),
+            id: properties.id || makeId("stop"),
             name: properties.name || "",
             notes: properties.notes || "",
             marker: null,
@@ -1126,62 +1304,218 @@
             keyboard: true,
             riseOnHover: true,
             pmIgnore: true,
-            icon: makeStopIcon(routeStops.length + 1),
+            icon: makeStopIcon(route, route.stops.length + 1),
         });
         stop.marker = marker;
 
         marker.on("click", (event) => {
             L.DomEvent.stopPropagation(event);
-            selectRouteStop(stop.id);
+            selectRouteStop(route.id, stop.id);
         });
-        marker.on("drag", updateRouteGeometry);
+        marker.on("drag", () => updateRouteGeometry(route));
         marker.on("dragend", () => {
-            updateRouteGeometry();
+            updateRouteGeometry(route);
             schedulePersist();
         });
 
-        marker.addTo(routeGroup);
-        routeStops.push(stop);
-        updateRouteGeometry();
-        if (options.select !== false) selectRouteStop(stop.id);
+        marker.addTo(route.group);
+        route.stops.push(stop);
+        updateRouteGeometry(route);
+        if (options.select !== false) selectRouteStop(route.id, stop.id);
         if (options.persist !== false) schedulePersist();
         return stop;
     }
 
-    function updateRouteGeometry() {
-        routeLine.setLatLngs(routeStops.map((stop) => stop.marker.getLatLng()));
-        routeStops.forEach((stop, index) => {
-            stop.marker.setIcon(
-                makeStopIcon(index + 1, stop.id === selectedStopId),
-            );
-            const label = stop.name || `Stop ${index + 1}`;
+    function updateRouteGeometry(route) {
+        if (!route) return;
+        const active = route.id === activeRouteId;
+        route.line.setLatLngs(
+            route.stops.map((stop) => stop.marker.getLatLng()),
+        );
+        route.line.setStyle({
+            color: route.color,
+            weight: active ? 5 : 3.5,
+            opacity: active ? 0.95 : 0.68,
+        });
+
+        route.stops.forEach((stop, index) => {
+            const selected = active && stop.id === selectedStopId;
+            stop.marker.setIcon(makeStopIcon(route, index + 1, selected));
+            const stopName = stop.name || `Stop ${index + 1}`;
+            const label = `${routeDisplayName(route)} · ${stopName}`;
             stop.marker.unbindTooltip();
             stop.marker.bindTooltip(label, {
                 direction: "top",
-                offset: [0, -14],
+                offset: [0, -15],
             });
         });
         updatePlannerSummary();
     }
 
-    function routeDistanceKm() {
+    function updateAllRouteGeometry() {
+        for (const route of routes) updateRouteGeometry(route);
+    }
+
+    function routeDistanceKm(route) {
+        if (!route) return 0;
         let metres = 0;
-        for (let index = 1; index < routeStops.length; index += 1) {
-            metres += routeStops[index - 1].marker
+        for (let index = 1; index < route.stops.length; index += 1) {
+            metres += route.stops[index - 1].marker
                 .getLatLng()
-                .distanceTo(routeStops[index].marker.getLatLng());
+                .distanceTo(route.stops[index].marker.getLatLng());
         }
         return metres / 1000;
     }
 
     function updatePlannerSummary() {
         if (!plannerUi) return;
-        const count = routeStops.length;
-        const distance = routeDistanceKm();
-        plannerUi.summary.textContent = `${count} ${count === 1 ? "stop" : "stops"} · ${distance.toLocaleString(undefined, { maximumFractionDigits: 0 })} km straight-line distance`;
+        const route = getActiveRoute();
+        const count = route?.stops.length || 0;
+        const distance = routeDistanceKm(route);
+        const totalStops = routes.reduce(
+            (sum, item) => sum + item.stops.length,
+            0,
+        );
+        plannerUi.summary.textContent = route
+            ? `${routeDisplayName(route)}: ${count} ${count === 1 ? "stop" : "stops"} · ${distance.toLocaleString(undefined, { maximumFractionDigits: 0 })} km straight-line · ${routes.length} ${routes.length === 1 ? "route" : "routes"} / ${totalStops} total stops`
+            : "No route is available.";
         plannerUi.undo.disabled = count === 0;
         plannerUi.clearRoute.disabled = count === 0;
         plannerUi.exportRoute.disabled = count === 0;
+        plannerUi.deleteRoute.disabled = routes.length <= 1;
+    }
+
+    function syncRouteControls() {
+        if (!plannerUi) return;
+        const route = getActiveRoute();
+        plannerUi.routeSelect.replaceChildren(
+            ...routes.map((item, index) => {
+                const option = document.createElement("option");
+                option.value = item.id;
+                option.textContent = routeDisplayName(item, index);
+                return option;
+            }),
+        );
+        if (route) {
+            plannerUi.routeSelect.value = route.id;
+            plannerUi.routeName.value = route.name;
+            plannerUi.routeSwatch.style.background = route.color;
+            plannerUi.routeSwatch.title = `${routeDisplayName(route)} color`;
+        } else {
+            plannerUi.routeName.value = "";
+            plannerUi.routeSwatch.style.background = "transparent";
+        }
+        plannerUi.editor.hidden = true;
+        updatePlannerSummary();
+    }
+
+    function setActiveRoute(id) {
+        const route = getRoute(id);
+        if (!route) return;
+        activeRouteId = route.id;
+        selectedStopId = null;
+        syncRouteControls();
+        updateAllRouteGeometry();
+    }
+
+    function selectRouteStop(routeId, stopId) {
+        const route = getRoute(routeId);
+        const stop = route?.stops.find((item) => item.id === stopId) || null;
+        if (!route || !stop) {
+            selectedStopId = null;
+            if (plannerUi) plannerUi.editor.hidden = true;
+            updateAllRouteGeometry();
+            return;
+        }
+
+        activeRouteId = route.id;
+        selectedStopId = stop.id;
+        syncRouteControls();
+        if (plannerUi) {
+            const index = route.stops.indexOf(stop);
+            plannerUi.editor.hidden = false;
+            plannerUi.editorTitle.textContent = `Edit stop ${index + 1}`;
+            plannerUi.stopName.value = stop.name;
+            plannerUi.stopNotes.value = stop.notes;
+            plannerUi.moveUp.disabled = index === 0;
+            plannerUi.moveDown.disabled = index === route.stops.length - 1;
+        }
+        updateAllRouteGeometry();
+    }
+
+    function deleteRouteStop(routeId, stopId) {
+        const route = getRoute(routeId);
+        if (!route) return;
+        const index = route.stops.findIndex((item) => item.id === stopId);
+        if (index < 0) return;
+        route.group.removeLayer(route.stops[index].marker);
+        route.stops.splice(index, 1);
+        selectedStopId = null;
+        if (plannerUi) plannerUi.editor.hidden = true;
+        updateRouteGeometry(route);
+        schedulePersist();
+    }
+
+    function moveSelectedStop(delta) {
+        const route = getActiveRoute();
+        if (!route) return;
+        const index = route.stops.findIndex(
+            (item) => item.id === selectedStopId,
+        );
+        const destination = index + delta;
+        if (
+            index < 0 ||
+            destination < 0 ||
+            destination >= route.stops.length
+        ) {
+            return;
+        }
+        [route.stops[index], route.stops[destination]] = [
+            route.stops[destination],
+            route.stops[index],
+        ];
+        selectRouteStop(route.id, selectedStopId);
+        schedulePersist();
+    }
+
+    function clearActiveRoute(options = {}) {
+        const route = getActiveRoute();
+        if (!route) return;
+        for (const stop of route.stops) route.group.removeLayer(stop.marker);
+        route.stops = [];
+        selectedStopId = null;
+        route.line.setLatLngs([]);
+        if (plannerUi) plannerUi.editor.hidden = true;
+        updateRouteGeometry(route);
+        if (options.persist !== false) schedulePersist();
+    }
+
+    function deleteActiveRoute(options = {}) {
+        const route = getActiveRoute();
+        if (!route) return;
+        routesGroup.removeLayer(route.group);
+        routes = routes.filter((item) => item.id !== route.id);
+        selectedStopId = null;
+        activeRouteId = routes[0]?.id || null;
+        if (!routes.length && options.createReplacement !== false) {
+            createRoute({}, { activate: true, persist: false });
+        }
+        syncRouteControls();
+        updateAllRouteGeometry();
+        if (options.persist !== false) schedulePersist();
+    }
+
+    function clearAllRoutes(options = {}) {
+        for (const route of routes) routesGroup.removeLayer(route.group);
+        routes = [];
+        activeRouteId = null;
+        selectedStopId = null;
+        routeColorCursor = 0;
+        if (options.createDefault !== false) {
+            createRoute({}, { activate: true, persist: false });
+        }
+        syncRouteControls();
+        if (options.persist !== false) schedulePersist();
     }
 
     function setAddingStops(enabled) {
@@ -1199,64 +1533,15 @@
         }
     }
 
-    function selectRouteStop(id) {
-        selectedStopId = id;
-        const stop = routeStops.find((item) => item.id === id) || null;
-        if (plannerUi) {
-            plannerUi.editor.hidden = !stop;
-            if (stop) {
-                const index = routeStops.indexOf(stop);
-                plannerUi.editorTitle.textContent = `Edit stop ${index + 1}`;
-                plannerUi.stopName.value = stop.name;
-                plannerUi.stopNotes.value = stop.notes;
-                plannerUi.moveUp.disabled = index === 0;
-                plannerUi.moveDown.disabled = index === routeStops.length - 1;
-            }
-        }
-        updateRouteGeometry();
-    }
-
-    function deleteRouteStop(id) {
-        const index = routeStops.findIndex((item) => item.id === id);
-        if (index < 0) return;
-        routeGroup.removeLayer(routeStops[index].marker);
-        routeStops.splice(index, 1);
-        selectedStopId = null;
-        if (plannerUi) plannerUi.editor.hidden = true;
-        updateRouteGeometry();
-        schedulePersist();
-    }
-
-    function moveSelectedStop(delta) {
-        const index = routeStops.findIndex(
-            (item) => item.id === selectedStopId,
-        );
-        const destination = index + delta;
-        if (index < 0 || destination < 0 || destination >= routeStops.length)
-            return;
-        [routeStops[index], routeStops[destination]] = [
-            routeStops[destination],
-            routeStops[index],
-        ];
-        selectRouteStop(selectedStopId);
-        schedulePersist();
-    }
-
-    function clearRoute(options = {}) {
-        for (const stop of routeStops) routeGroup.removeLayer(stop.marker);
-        routeStops = [];
-        selectedStopId = null;
-        routeLine.setLatLngs([]);
-        if (plannerUi) plannerUi.editor.hidden = true;
-        updateRouteGeometry();
-        if (options.persist !== false) schedulePersist();
-    }
-
     map.on("click", (event) => {
         if (addingStops) {
-            addRouteStop(event.latlng);
+            let route = getActiveRoute();
+            if (!route) route = createRoute({}, { persist: false });
+            addRouteStop(route.id, event.latlng);
         } else if (selectedStopId) {
-            selectRouteStop(null);
+            selectedStopId = null;
+            if (plannerUi) plannerUi.editor.hidden = true;
+            updateAllRouteGeometry();
         }
     });
 
@@ -1350,45 +1635,58 @@
 
     const geomanAvailable = setupGeoman();
 
-    function routeFeatures() {
-        const features = routeStops.map((stop, index) => {
-            const latlng = stop.marker.getLatLng();
-            return {
-                type: "Feature",
-                properties: {
-                    kind: "route-stop",
-                    id: stop.id,
-                    order: index + 1,
-                    name: stop.name || `Stop ${index + 1}`,
-                    notes: stop.notes || "",
-                },
-                geometry: {
-                    type: "Point",
-                    coordinates: [latlng.lng, latlng.lat],
-                },
-            };
-        });
-
-        if (routeStops.length >= 2) {
-            features.push({
-                type: "Feature",
-                properties: {
-                    kind: "route-line",
-                    name: "Trip route",
-                    distanceKmStraightLine: Number(
-                        routeDistanceKm().toFixed(1),
-                    ),
-                },
-                geometry: {
-                    type: "LineString",
-                    coordinates: routeStops.map((stop) => {
-                        const latlng = stop.marker.getLatLng();
-                        return [latlng.lng, latlng.lat];
-                    }),
-                },
+    function routeFeatures(routesToExport = routes) {
+        const features = [];
+        routesToExport.forEach((route, routeIndex) => {
+            route.stops.forEach((stop, stopIndex) => {
+                const latlng = stop.marker.getLatLng();
+                features.push({
+                    type: "Feature",
+                    properties: {
+                        kind: "route-stop",
+                        routeId: route.id,
+                        routeName: routeDisplayName(route, routeIndex),
+                        routeColor: route.color,
+                        routeColorDark: route.dark,
+                        routeColorIndex: route.colorIndex,
+                        routeOrder: routeIndex + 1,
+                        id: stop.id,
+                        order: stopIndex + 1,
+                        name: stop.name || `Stop ${stopIndex + 1}`,
+                        notes: stop.notes || "",
+                    },
+                    geometry: {
+                        type: "Point",
+                        coordinates: [latlng.lng, latlng.lat],
+                    },
+                });
             });
-        }
 
+            if (route.stops.length >= 2) {
+                features.push({
+                    type: "Feature",
+                    properties: {
+                        kind: "route-line",
+                        routeId: route.id,
+                        routeName: routeDisplayName(route, routeIndex),
+                        routeColor: route.color,
+                        routeColorDark: route.dark,
+                        routeColorIndex: route.colorIndex,
+                        routeOrder: routeIndex + 1,
+                        distanceKmStraightLine: Number(
+                            routeDistanceKm(route).toFixed(1),
+                        ),
+                    },
+                    geometry: {
+                        type: "LineString",
+                        coordinates: route.stops.map((stop) => {
+                            const latlng = stop.marker.getLatLng();
+                            return [latlng.lng, latlng.lat];
+                        }),
+                    },
+                });
+            }
+        });
         return features;
     }
 
@@ -1407,14 +1705,33 @@
         return features;
     }
 
-    function makeFeatureCollection(features, scope) {
+    function routeMetadata(routesToExport = routes) {
+        return routesToExport.map((route, index) => ({
+            id: route.id,
+            name: routeDisplayName(route, index),
+            color: route.color,
+            dark: route.dark,
+            colorIndex: route.colorIndex,
+            order: index + 1,
+        }));
+    }
+
+    function makeFeatureCollection(
+        features,
+        scope,
+        routesToExport = routes,
+    ) {
         return {
             type: "FeatureCollection",
             metadata: {
                 application: "Southeast Asia trip planner",
+                version: 3,
                 scope,
                 exportedAt: new Date().toISOString(),
                 routeDistanceIsStraightLine: true,
+                activeRouteId,
+                routeColorCursor,
+                routes: routeMetadata(routesToExport),
             },
             features,
         };
@@ -1436,6 +1753,13 @@
 
     function dateStamp() {
         return new Date().toISOString().slice(0, 10);
+    }
+
+    function filenameSlug(value) {
+        return String(value || "route")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "") || "route";
     }
 
     function clearSketches(options = {}) {
@@ -1496,55 +1820,135 @@
         layer.eachLayer((itemLayer) => sketchGroup.addLayer(itemLayer));
     }
 
+    function routeDescriptorsFromCollection(collection, stopFeatures) {
+        const metadataRoutes = Array.isArray(collection.metadata?.routes)
+            ? collection.metadata.routes
+            : [];
+        const descriptors = new Map();
+
+        metadataRoutes.forEach((item, index) => {
+            const id = item.id || `route-${index + 1}`;
+            descriptors.set(id, {
+                id,
+                name: item.name || `Route ${index + 1}`,
+                color: item.color,
+                dark: item.dark,
+                colorIndex: Number.isFinite(Number(item.colorIndex))
+                    ? Number(item.colorIndex)
+                    : index,
+                order: Number(item.order) || index + 1,
+            });
+        });
+
+        stopFeatures.forEach((feature, index) => {
+            const properties = feature.properties || {};
+            const id = properties.routeId || "route-1";
+            if (!descriptors.has(id)) {
+                descriptors.set(id, {
+                    id,
+                    name:
+                        properties.routeName ||
+                        (id === "route-1" ? "Trip route" : `Route ${index + 1}`),
+                    color: properties.routeColor,
+                    dark: properties.routeColorDark,
+                    colorIndex: Number.isFinite(
+                        Number(properties.routeColorIndex),
+                    )
+                        ? Number(properties.routeColorIndex)
+                        : descriptors.size,
+                    order: Number(properties.routeOrder) || descriptors.size + 1,
+                });
+            }
+        });
+
+        return [...descriptors.values()].sort(
+            (a, b) => Number(a.order || 0) - Number(b.order || 0),
+        );
+    }
+
     function loadWorkspaceData(data, options = {}) {
         const collection = normalizeFeatureCollection(data);
         const features = collection.features.filter(Boolean);
-        const stopFeatures = features
-            .filter(
-                (feature) =>
-                    feature.geometry?.type === "Point" &&
-                    feature.properties?.kind === "route-stop",
-            )
-            .sort(
-                (a, b) =>
-                    Number(a.properties?.order || 0) -
-                    Number(b.properties?.order || 0),
-            );
+        const stopFeatures = features.filter(
+            (feature) =>
+                feature.geometry?.type === "Point" &&
+                feature.properties?.kind === "route-stop",
+        );
         const sketchFeaturesToLoad = features.filter(
             (feature) =>
                 feature.properties?.kind !== "route-stop" &&
                 feature.properties?.kind !== "route-line",
         );
+        const descriptors = routeDescriptorsFromCollection(
+            collection,
+            stopFeatures,
+        );
 
         restoreInProgress = true;
-        clearRoute({ persist: false });
+        clearAllRoutes({
+            createDefault: false,
+            persist: false,
+        });
         clearSketches({ persist: false });
 
-        for (const feature of stopFeatures) {
-            const [lon, lat] = feature.geometry.coordinates || [];
-            if (
-                !Number.isFinite(Number(lat)) ||
-                !Number.isFinite(Number(lon))
-            ) {
-                continue;
-            }
-            addRouteStop(
-                [Number(lat), Number(lon)],
-                {
-                    id: feature.properties?.id,
-                    name: feature.properties?.name || "",
-                    notes: feature.properties?.notes || "",
-                },
-                { select: false, persist: false },
-            );
+        for (const descriptor of descriptors) {
+            createRoute(descriptor, { activate: false, persist: false });
+        }
+        if (!routes.length) {
+            createRoute({}, { activate: false, persist: false });
         }
 
-        importSketchFeatures(sketchFeaturesToLoad);
-        selectRouteStop(null);
-        restoreInProgress = false;
-        updateRouteGeometry();
+        const routeOrder = new Map(
+            routes.map((route, index) => [route.id, index]),
+        );
+        stopFeatures
+            .slice()
+            .sort((a, b) => {
+                const routeA = a.properties?.routeId || "route-1";
+                const routeB = b.properties?.routeId || "route-1";
+                const routeDifference =
+                    (routeOrder.get(routeA) || 0) -
+                    (routeOrder.get(routeB) || 0);
+                if (routeDifference) return routeDifference;
+                return (
+                    Number(a.properties?.order || 0) -
+                    Number(b.properties?.order || 0)
+                );
+            })
+            .forEach((feature) => {
+                const [lon, lat] = feature.geometry.coordinates || [];
+                if (
+                    !Number.isFinite(Number(lat)) ||
+                    !Number.isFinite(Number(lon))
+                ) {
+                    return;
+                }
+                const routeId = feature.properties?.routeId || routes[0].id;
+                addRouteStop(
+                    getRoute(routeId)?.id || routes[0].id,
+                    [Number(lat), Number(lon)],
+                    {
+                        id: feature.properties?.id,
+                        name: feature.properties?.name || "",
+                        notes: feature.properties?.notes || "",
+                    },
+                    { select: false, persist: false },
+                );
+            });
 
-        const bounds = L.featureGroup([routeGroup, sketchGroup]).getBounds();
+        importSketchFeatures(sketchFeaturesToLoad);
+        activeRouteId =
+            getRoute(collection.metadata?.activeRouteId)?.id || routes[0].id;
+        routeColorCursor = Math.max(
+            routeColorCursor,
+            Number(collection.metadata?.routeColorCursor) || 0,
+        );
+        selectedStopId = null;
+        restoreInProgress = false;
+        syncRouteControls();
+        updateAllRouteGeometry();
+
+        const bounds = L.featureGroup([routesGroup, sketchGroup]).getBounds();
         if (options.fit !== false && bounds.isValid()) {
             map.fitBounds(bounds.pad(0.18), { maxZoom: 8 });
         }
@@ -1571,19 +1975,31 @@
 
     function restoreSavedWorkspace() {
         try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (!raw) return;
+            const current = localStorage.getItem(STORAGE_KEY);
+            const legacy = current
+                ? null
+                : localStorage.getItem(LEGACY_STORAGE_KEY);
+            const raw = current || legacy;
+            if (!raw) {
+                createRoute({}, { activate: true, persist: false });
+                return;
+            }
             loadWorkspaceData(JSON.parse(raw), {
                 fit: false,
                 persist: false,
             });
+            if (legacy) schedulePersist();
             setPlannerMessage(
-                "Restored your browser-saved workspace.",
+                legacy
+                    ? "Migrated and restored your saved route."
+                    : "Restored your browser-saved workspace.",
                 "success",
             );
         } catch (error) {
             console.warn("Could not restore workspace", error);
             localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(LEGACY_STORAGE_KEY);
+            clearAllRoutes({ persist: false });
         }
     }
 
@@ -1612,13 +2028,26 @@
                 </div>
                 <div class="planner-body">
                     <section class="planner-section">
-                        <div class="planner-section__title">Route</div>
-                        <p class="planner-hint">Add stops, drag them into place, and edit their names. The line connects stops in order.</p>
+                        <div class="planner-section__title">Routes</div>
+                        <p class="planner-hint">Keep several independent routes on the map. New routes automatically receive a strongly contrasting color.</p>
+                        <div class="route-manager">
+                            <label>Active route
+                                <span class="route-manager__select-row">
+                                    <span class="route-color-swatch" aria-hidden="true"></span>
+                                    <select class="js-route-select" aria-label="Active route"></select>
+                                </span>
+                            </label>
+                            <label>Route name
+                                <input class="js-route-name" type="text" maxlength="120" placeholder="e.g. Eastern Indonesia" />
+                            </label>
+                        </div>
                         <div class="planner-actions">
+                            <button class="js-new-route" type="button">New route</button>
+                            <button class="js-delete-route danger" type="button">Delete route</button>
                             <button class="js-add-stops" type="button" aria-pressed="false">Add route stops</button>
                             <button class="js-undo" type="button">Undo last</button>
-                            <button class="js-export-route" type="button">Export route</button>
-                            <button class="js-clear-route danger" type="button">Clear route</button>
+                            <button class="js-export-route" type="button">Export active</button>
+                            <button class="js-clear-route danger" type="button">Clear active</button>
                         </div>
                         <div class="route-summary" aria-live="polite"></div>
                         <div class="stop-editor" hidden>
@@ -1646,7 +2075,7 @@
                     </section>
                     <section class="planner-section">
                         <div class="planner-section__title">GeoJSON files</div>
-                        <p class="planner-hint">Export the complete workspace or import any GeoJSON. Route stops are preserved as editable numbered points.</p>
+                        <p class="planner-hint">Export all routes and drawings, or import a saved workspace. Older single-route exports remain supported.</p>
                         <div class="planner-actions">
                             <button class="js-export-all" type="button">Export all</button>
                             <button class="js-import" type="button">Import GeoJSON</button>
@@ -1660,6 +2089,11 @@
             plannerUi = {
                 container,
                 collapse: container.querySelector(".control-collapse"),
+                routeSelect: container.querySelector(".js-route-select"),
+                routeName: container.querySelector(".js-route-name"),
+                routeSwatch: container.querySelector(".route-color-swatch"),
+                newRoute: container.querySelector(".js-new-route"),
+                deleteRoute: container.querySelector(".js-delete-route"),
                 addStops: container.querySelector(".js-add-stops"),
                 undo: container.querySelector(".js-undo"),
                 exportRoute: container.querySelector(".js-export-route"),
@@ -1691,47 +2125,95 @@
                 );
             });
 
+            plannerUi.routeSelect.addEventListener("change", () => {
+                setActiveRoute(plannerUi.routeSelect.value);
+            });
+
+            plannerUi.routeName.addEventListener("input", () => {
+                const route = getActiveRoute();
+                if (!route) return;
+                route.name = plannerUi.routeName.value;
+                const option = [...plannerUi.routeSelect.options].find(
+                    (item) => item.value === route.id,
+                );
+                if (option) option.textContent = routeDisplayName(route);
+                updateRouteGeometry(route);
+                schedulePersist();
+            });
+
+            plannerUi.newRoute.addEventListener("click", () => {
+                const route = createRoute();
+                setPlannerMessage(
+                    `${routeDisplayName(route)} created in ${route.color}.`,
+                    "success",
+                );
+            });
+
+            plannerUi.deleteRoute.addEventListener("click", () => {
+                const route = getActiveRoute();
+                if (
+                    route &&
+                    confirm(`Delete ${routeDisplayName(route)} and its stops?`)
+                ) {
+                    deleteActiveRoute();
+                    setPlannerMessage("Route deleted.");
+                }
+            });
+
             plannerUi.addStops.addEventListener("click", () => {
                 setAddingStops(!addingStops);
                 setPlannerMessage(
                     addingStops
-                        ? "Click the map to add stops. Press Escape when finished."
+                        ? `Click the map to add stops to ${routeDisplayName(getActiveRoute())}. Press Escape when finished.`
                         : "Route editing paused.",
                 );
             });
 
             plannerUi.undo.addEventListener("click", () => {
-                const last = routeStops.at(-1);
-                if (last) deleteRouteStop(last.id);
+                const route = getActiveRoute();
+                const last = route?.stops.at(-1);
+                if (route && last) deleteRouteStop(route.id, last.id);
             });
 
             plannerUi.clearRoute.addEventListener("click", () => {
-                if (routeStops.length && confirm("Clear all route stops?")) {
-                    clearRoute();
-                    setPlannerMessage("Route cleared.");
+                const route = getActiveRoute();
+                if (
+                    route?.stops.length &&
+                    confirm(`Clear all stops from ${routeDisplayName(route)}?`)
+                ) {
+                    clearActiveRoute();
+                    setPlannerMessage("Active route cleared.");
                 }
             });
 
             plannerUi.exportRoute.addEventListener("click", () => {
+                const route = getActiveRoute();
+                if (!route) return;
                 downloadGeoJson(
-                    makeFeatureCollection(routeFeatures(), "route"),
-                    `southeast-asia-route-${dateStamp()}.geojson`,
+                    makeFeatureCollection(
+                        routeFeatures([route]),
+                        "route",
+                        [route],
+                    ),
+                    `${filenameSlug(routeDisplayName(route))}-${dateStamp()}.geojson`,
                 );
-                setPlannerMessage("Route GeoJSON downloaded.", "success");
+                setPlannerMessage("Active route GeoJSON downloaded.", "success");
             });
 
             plannerUi.stopName.addEventListener("input", () => {
-                const stop = routeStops.find(
+                const route = getActiveRoute();
+                const stop = route?.stops.find(
                     (item) => item.id === selectedStopId,
                 );
                 if (!stop) return;
                 stop.name = plannerUi.stopName.value;
-                updateRouteGeometry();
+                updateRouteGeometry(route);
                 schedulePersist();
             });
 
             plannerUi.stopNotes.addEventListener("input", () => {
-                const stop = routeStops.find(
+                const route = getActiveRoute();
+                const stop = route?.stops.find(
                     (item) => item.id === selectedStopId,
                 );
                 if (!stop) return;
@@ -1746,7 +2228,10 @@
                 moveSelectedStop(1),
             );
             plannerUi.deleteStop.addEventListener("click", () => {
-                if (selectedStopId) deleteRouteStop(selectedStopId);
+                const route = getActiveRoute();
+                if (route && selectedStopId) {
+                    deleteRouteStop(route.id, selectedStopId);
+                }
             });
 
             plannerUi.clearSketches.addEventListener("click", () => {
@@ -1761,7 +2246,7 @@
 
             plannerUi.fitWorkspace.addEventListener("click", () => {
                 const bounds = L.featureGroup([
-                    routeGroup,
+                    routesGroup,
                     sketchGroup,
                 ]).getBounds();
                 if (bounds.isValid()) {
@@ -1794,12 +2279,12 @@
                 try {
                     const data = JSON.parse(await file.text());
                     const hasWorkspace =
-                        routeStops.length > 0 ||
+                        routes.some((route) => route.stops.length > 0) ||
                         sketchGroup.getLayers().length > 0;
                     if (
                         hasWorkspace &&
                         !confirm(
-                            "Replace the current route and drawings with this file?",
+                            "Replace the current routes and drawings with this file?",
                         )
                     ) {
                         return;
@@ -1823,7 +2308,7 @@
                 );
             }
 
-            updatePlannerSummary();
+            syncRouteControls();
             return container;
         },
     });
