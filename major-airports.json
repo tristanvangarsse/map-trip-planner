@@ -1,0 +1,172 @@
+[
+  {
+    "name": "Suvarnabhumi Airport",
+    "code": "BKK",
+    "country": "Thailand",
+    "lat": 13.69,
+    "lon": 100.7501,
+    "category": "airport",
+    "summary": "Bangkok primary international airport."
+  },
+  {
+    "name": "Don Mueang Airport",
+    "code": "DMK",
+    "country": "Thailand",
+    "lat": 13.9126,
+    "lon": 100.6068,
+    "category": "airport",
+    "summary": "Bangkok low-cost and regional hub."
+  },
+  {
+    "name": "Chiang Mai Airport",
+    "code": "CNX",
+    "country": "Thailand",
+    "lat": 18.7668,
+    "lon": 98.9626,
+    "category": "airport"
+  },
+  {
+    "name": "Phuket Airport",
+    "code": "HKT",
+    "country": "Thailand",
+    "lat": 8.1132,
+    "lon": 98.3169,
+    "category": "airport"
+  },
+  {
+    "name": "Singapore Changi Airport",
+    "code": "SIN",
+    "country": "Singapore",
+    "lat": 1.3644,
+    "lon": 103.9915,
+    "category": "airport"
+  },
+  {
+    "name": "Kuala Lumpur International Airport",
+    "code": "KUL",
+    "country": "Malaysia",
+    "lat": 2.7456,
+    "lon": 101.7072,
+    "category": "airport"
+  },
+  {
+    "name": "Penang International Airport",
+    "code": "PEN",
+    "country": "Malaysia",
+    "lat": 5.2971,
+    "lon": 100.2769,
+    "category": "airport"
+  },
+  {
+    "name": "Tan Son Nhat Airport",
+    "code": "SGN",
+    "country": "Vietnam",
+    "lat": 10.8188,
+    "lon": 106.6519,
+    "category": "airport"
+  },
+  {
+    "name": "Noi Bai Airport",
+    "code": "HAN",
+    "country": "Vietnam",
+    "lat": 21.2212,
+    "lon": 105.8072,
+    "category": "airport"
+  },
+  {
+    "name": "Da Nang Airport",
+    "code": "DAD",
+    "country": "Vietnam",
+    "lat": 16.0439,
+    "lon": 108.1994,
+    "category": "airport"
+  },
+  {
+    "name": "Ngurah Rai Airport",
+    "code": "DPS",
+    "country": "Indonesia",
+    "lat": -8.7482,
+    "lon": 115.1672,
+    "category": "airport"
+  },
+  {
+    "name": "Soekarno-Hatta Airport",
+    "code": "CGK",
+    "country": "Indonesia",
+    "lat": -6.1256,
+    "lon": 106.6559,
+    "category": "airport"
+  },
+  {
+    "name": "Ninoy Aquino Airport",
+    "code": "MNL",
+    "country": "Philippines",
+    "lat": 14.5086,
+    "lon": 121.0198,
+    "category": "airport"
+  },
+  {
+    "name": "Mactan-Cebu Airport",
+    "code": "CEB",
+    "country": "Philippines",
+    "lat": 10.3075,
+    "lon": 123.9794,
+    "category": "airport"
+  },
+  {
+    "name": "Phnom Penh Airport",
+    "code": "PNH",
+    "country": "Cambodia",
+    "lat": 11.5466,
+    "lon": 104.8441,
+    "category": "airport"
+  },
+  {
+    "name": "Siem Reap–Angkor Airport",
+    "code": "SAI",
+    "country": "Cambodia",
+    "lat": 13.3692,
+    "lon": 104.223,
+    "category": "airport"
+  },
+  {
+    "name": "Wattay Airport",
+    "code": "VTE",
+    "country": "Laos",
+    "lat": 17.9883,
+    "lon": 102.5633,
+    "category": "airport"
+  },
+  {
+    "name": "Luang Prabang Airport",
+    "code": "LPQ",
+    "country": "Laos",
+    "lat": 19.8973,
+    "lon": 102.1608,
+    "category": "airport"
+  },
+  {
+    "name": "Yangon Airport",
+    "code": "RGN",
+    "country": "Myanmar",
+    "lat": 16.9073,
+    "lon": 96.1332,
+    "category": "airport"
+  },
+  {
+    "name": "Brunei International Airport",
+    "code": "BWN",
+    "country": "Brunei",
+    "lat": 4.9442,
+    "lon": 114.9284,
+    "category": "airport"
+  },
+  {
+    "name": "Dili Airport",
+    "code": "DIL",
+    "country": "Timor-Leste",
+    "lat": -8.5464,
+    "lon": 125.5247,
+    "category": "airport"
+  }
+]

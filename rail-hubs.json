@@ -1,0 +1,112 @@
+[
+  {
+    "name": "Krung Thep Aphiwat Central Terminal",
+    "country": "Thailand",
+    "lat": 13.8032,
+    "lon": 100.5404,
+    "category": "rail",
+    "summary": "Bangkok main intercity rail terminal."
+  },
+  {
+    "name": "Chiang Mai Railway Station",
+    "country": "Thailand",
+    "lat": 18.7839,
+    "lon": 99.0169,
+    "category": "rail"
+  },
+  {
+    "name": "Padang Besar Railway Station",
+    "country": "Malaysia",
+    "lat": 6.6627,
+    "lon": 100.3217,
+    "category": "rail",
+    "summary": "Thailand–Malaysia rail interchange."
+  },
+  {
+    "name": "Butterworth Railway Station",
+    "country": "Malaysia",
+    "lat": 5.3946,
+    "lon": 100.3664,
+    "category": "rail",
+    "summary": "Rail and ferry connection for George Town."
+  },
+  {
+    "name": "KL Sentral",
+    "country": "Malaysia",
+    "lat": 3.1343,
+    "lon": 101.6861,
+    "category": "rail"
+  },
+  {
+    "name": "JB Sentral",
+    "country": "Malaysia",
+    "lat": 1.4636,
+    "lon": 103.7647,
+    "category": "rail"
+  },
+  {
+    "name": "Woodlands Train Checkpoint",
+    "country": "Singapore",
+    "lat": 1.4455,
+    "lon": 103.7691,
+    "category": "rail"
+  },
+  {
+    "name": "Hanoi Railway Station",
+    "country": "Vietnam",
+    "lat": 21.0242,
+    "lon": 105.8412,
+    "category": "rail"
+  },
+  {
+    "name": "Da Nang Railway Station",
+    "country": "Vietnam",
+    "lat": 16.0702,
+    "lon": 108.2097,
+    "category": "rail"
+  },
+  {
+    "name": "Saigon Railway Station",
+    "country": "Vietnam",
+    "lat": 10.782,
+    "lon": 106.6779,
+    "category": "rail"
+  },
+  {
+    "name": "Vientiane Railway Station",
+    "country": "Laos",
+    "lat": 18.1095,
+    "lon": 102.7287,
+    "category": "rail",
+    "summary": "Laos–China railway."
+  },
+  {
+    "name": "Luang Prabang Railway Station",
+    "country": "Laos",
+    "lat": 19.868,
+    "lon": 102.2133,
+    "category": "rail",
+    "summary": "Laos–China railway."
+  },
+  {
+    "name": "Gambir Station",
+    "country": "Indonesia",
+    "lat": -6.1767,
+    "lon": 106.8306,
+    "category": "rail"
+  },
+  {
+    "name": "Yogyakarta Tugu Station",
+    "country": "Indonesia",
+    "lat": -7.7892,
+    "lon": 110.3638,
+    "category": "rail"
+  },
+  {
+    "name": "Surabaya Gubeng Station",
+    "country": "Indonesia",
+    "lat": -7.2653,
+    "lon": 112.7523,
+    "category": "rail"
+  }
+]

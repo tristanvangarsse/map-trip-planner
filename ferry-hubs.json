@@ -1,0 +1,87 @@
+[
+  {
+    "name": "HarbourFront Ferry Terminal",
+    "country": "Singapore",
+    "lat": 1.2622,
+    "lon": 103.8198,
+    "category": "ferry",
+    "summary": "Regional ferries, including Batam and Bintan."
+  },
+  {
+    "name": "Batam Centre Ferry Terminal",
+    "country": "Indonesia",
+    "lat": 1.1303,
+    "lon": 104.055,
+    "category": "ferry"
+  },
+  {
+    "name": "Swettenham Pier, George Town",
+    "country": "Malaysia",
+    "lat": 5.4185,
+    "lon": 100.3461,
+    "category": "ferry"
+  },
+  {
+    "name": "Kuah Jetty, Langkawi",
+    "country": "Malaysia",
+    "lat": 6.3166,
+    "lon": 99.8498,
+    "category": "ferry"
+  },
+  {
+    "name": "Rassada Pier, Phuket",
+    "country": "Thailand",
+    "lat": 7.8724,
+    "lon": 98.423,
+    "category": "ferry"
+  },
+  {
+    "name": "Klong Jilad Pier, Krabi",
+    "country": "Thailand",
+    "lat": 8.0361,
+    "lon": 98.9067,
+    "category": "ferry"
+  },
+  {
+    "name": "Nathon Pier, Koh Samui",
+    "country": "Thailand",
+    "lat": 9.5355,
+    "lon": 99.9344,
+    "category": "ferry"
+  },
+  {
+    "name": "Sanur Harbour",
+    "country": "Indonesia",
+    "lat": -8.6745,
+    "lon": 115.2638,
+    "category": "ferry"
+  },
+  {
+    "name": "Padang Bai Harbour",
+    "country": "Indonesia",
+    "lat": -8.5315,
+    "lon": 115.5077,
+    "category": "ferry"
+  },
+  {
+    "name": "Bangsal Harbour, Lombok",
+    "country": "Indonesia",
+    "lat": -8.3939,
+    "lon": 116.1009,
+    "category": "ferry"
+  },
+  {
+    "name": "Cebu Pier 1",
+    "country": "Philippines",
+    "lat": 10.2934,
+    "lon": 123.9086,
+    "category": "ferry"
+  },
+  {
+    "name": "Dumaguete Port",
+    "country": "Philippines",
+    "lat": 9.309,
+    "lon": 123.3091,
+    "category": "ferry"
+  }
+]

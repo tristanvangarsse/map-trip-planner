@@ -1,0 +1,141 @@
+[
+  {
+    "name": "Khao Sok National Park",
+    "country": "Thailand",
+    "lat": 8.9365,
+    "lon": 98.5306,
+    "category": "nature",
+    "summary": "Rainforest and karst landscape."
+  },
+  {
+    "name": "Doi Inthanon National Park",
+    "country": "Thailand",
+    "lat": 18.588,
+    "lon": 98.4867,
+    "category": "nature",
+    "summary": "Mountain park near Chiang Mai."
+  },
+  {
+    "name": "Khao Yai National Park",
+    "country": "Thailand",
+    "lat": 14.4392,
+    "lon": 101.3727,
+    "category": "nature"
+  },
+  {
+    "name": "Taman Negara",
+    "country": "Malaysia",
+    "lat": 4.68,
+    "lon": 102.466,
+    "category": "nature",
+    "summary": "Large lowland rainforest park."
+  },
+  {
+    "name": "Kinabalu Park",
+    "country": "Malaysia",
+    "lat": 6.0752,
+    "lon": 116.5587,
+    "category": "nature"
+  },
+  {
+    "name": "Gunung Mulu National Park",
+    "country": "Malaysia",
+    "lat": 4.0458,
+    "lon": 114.8147,
+    "category": "nature",
+    "summary": "Caves and rainforest in Sarawak."
+  },
+  {
+    "name": "Bako National Park",
+    "country": "Malaysia",
+    "lat": 1.714,
+    "lon": 110.466,
+    "category": "nature"
+  },
+  {
+    "name": "Komodo National Park",
+    "country": "Indonesia",
+    "lat": -8.551,
+    "lon": 119.489,
+    "category": "nature"
+  },
+  {
+    "name": "Bromo Tengger Semeru National Park",
+    "country": "Indonesia",
+    "lat": -7.9425,
+    "lon": 112.953,
+    "category": "nature"
+  },
+  {
+    "name": "Gunung Leuser National Park",
+    "country": "Indonesia",
+    "lat": 3.791,
+    "lon": 97.44,
+    "category": "nature"
+  },
+  {
+    "name": "Ujung Kulon National Park",
+    "country": "Indonesia",
+    "lat": -6.779,
+    "lon": 105.327,
+    "category": "nature"
+  },
+  {
+    "name": "Phong Nha–Kẻ Bàng National Park",
+    "country": "Vietnam",
+    "lat": 17.59,
+    "lon": 106.283,
+    "category": "nature",
+    "summary": "Karst caves and forest."
+  },
+  {
+    "name": "Cát Tiên National Park",
+    "country": "Vietnam",
+    "lat": 11.429,
+    "lon": 107.428,
+    "category": "nature"
+  },
+  {
+    "name": "Ba Bể National Park",
+    "country": "Vietnam",
+    "lat": 22.418,
+    "lon": 105.624,
+    "category": "nature"
+  },
+  {
+    "name": "Nam Et–Phou Louey National Park",
+    "country": "Laos",
+    "lat": 20.19,
+    "lon": 103.39,
+    "category": "nature"
+  },
+  {
+    "name": "Bokor National Park",
+    "country": "Cambodia",
+    "lat": 10.63,
+    "lon": 104.03,
+    "category": "nature"
+  },
+  {
+    "name": "Puerto Princesa Subterranean River National Park",
+    "country": "Philippines",
+    "lat": 10.195,
+    "lon": 118.926,
+    "category": "nature"
+  },
+  {
+    "name": "Mount Pulag National Park",
+    "country": "Philippines",
+    "lat": 16.596,
+    "lon": 120.898,
+    "category": "nature"
+  },
+  {
+    "name": "Tubbataha Reefs Natural Park",
+    "country": "Philippines",
+    "lat": 8.953,
+    "lon": 119.87,
+    "category": "nature",
+    "summary": "Remote marine protected area."
+  }
+]

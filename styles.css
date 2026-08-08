@@ -1,0 +1,428 @@
+:root {
+    color-scheme: light;
+    --card-bg: rgba(255, 255, 255, 0.96);
+    --card-border: rgba(18, 27, 39, 0.2);
+    --text: #16202a;
+    --muted: #5b6673;
+    --accent: #9c2554;
+    --accent-dark: #72183b;
+    --focus: #245bb6;
+    --danger: #a32222;
+}
+
+html,
+body,
+#map {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    overflow: hidden;
+    font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+button,
+input,
+textarea {
+    font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid rgba(36, 91, 182, 0.3);
+    outline-offset: 1px;
+}
+
+.map-is-adding-stops,
+.map-is-adding-stops .leaflet-interactive {
+    cursor: crosshair !important;
+}
+
+/* Dataset selector */
+.overlay-picker {
+    width: min(270px, calc(100vw - 36px));
+    max-height: min(66vh, 520px);
+    overflow: auto;
+    padding: 11px 12px;
+    box-sizing: border-box;
+    color: var(--text);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(20, 30, 45, 0.2);
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.control-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.control-title {
+    font-size: 15px;
+    font-weight: 750;
+}
+
+.control-subtitle {
+    margin: 0 0 7px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.overlay-picker label {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    align-items: start;
+    gap: 7px;
+    padding: 5px 3px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.overlay-picker label:hover {
+    background: rgba(25, 45, 70, 0.06);
+}
+
+.overlay-picker input {
+    margin: 2px 0 0;
+}
+
+.overlay-picker__description {
+    min-height: 30px;
+    margin-top: 7px;
+    padding-top: 7px;
+    border-top: 1px solid rgba(18, 27, 39, 0.12);
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.overlay-picker__error {
+    margin-top: 5px;
+    color: var(--danger);
+    font-size: 11px;
+    font-weight: 650;
+}
+
+/* Planner */
+.planner-panel {
+    width: min(330px, calc(100vw - 36px));
+    max-height: min(72vh, 660px);
+    overflow: auto;
+    box-sizing: border-box;
+    padding: 11px 12px;
+    color: var(--text);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(20, 30, 45, 0.2);
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.planner-panel--collapsed {
+    width: auto;
+    min-width: 145px;
+}
+
+.planner-panel--collapsed .planner-body {
+    display: none;
+}
+
+.control-collapse {
+    min-width: 28px;
+    min-height: 26px;
+    padding: 1px 7px;
+    color: var(--text);
+    background: #fff;
+    border: 1px solid rgba(18, 27, 39, 0.25);
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.planner-section {
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px solid rgba(18, 27, 39, 0.12);
+}
+
+.planner-section:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+
+.planner-section__title {
+    margin-bottom: 5px;
+    font-weight: 750;
+}
+
+.planner-hint {
+    margin: 4px 0 7px;
+    color: var(--muted);
+}
+
+.planner-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.planner-actions button,
+.stop-editor button {
+    min-height: 31px;
+    padding: 5px 8px;
+    color: var(--text);
+    background: #fff;
+    border: 1px solid rgba(18, 27, 39, 0.25);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.planner-actions button:hover,
+.stop-editor button:hover,
+.control-collapse:hover {
+    background: #f4f6f8;
+}
+
+.planner-actions button.is-active {
+    color: #fff;
+    background: var(--accent);
+    border-color: var(--accent-dark);
+}
+
+.planner-actions button.danger,
+.stop-editor button.danger {
+    color: var(--danger);
+}
+
+.route-summary {
+    margin-top: 7px;
+    padding: 6px 8px;
+    color: #3f4c59;
+    background: rgba(25, 45, 70, 0.06);
+    border-radius: 6px;
+}
+
+.stop-editor {
+    margin-top: 8px;
+    padding: 8px;
+    background: rgba(156, 37, 84, 0.06);
+    border: 1px solid rgba(156, 37, 84, 0.18);
+    border-radius: 7px;
+}
+
+.stop-editor[hidden] {
+    display: none;
+}
+
+.stop-editor label {
+    display: block;
+    margin: 0 0 7px;
+    font-weight: 650;
+}
+
+.stop-editor input,
+.stop-editor textarea {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 3px;
+    padding: 6px 7px;
+    color: var(--text);
+    background: #fff;
+    border: 1px solid rgba(18, 27, 39, 0.28);
+    border-radius: 5px;
+    font-weight: 400;
+}
+
+.stop-editor textarea {
+    min-height: 58px;
+    resize: vertical;
+}
+
+.stop-editor__actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+}
+
+.planner-message {
+    min-height: 17px;
+    margin-top: 7px;
+    color: var(--muted);
+}
+
+.planner-message.is-error {
+    color: var(--danger);
+    font-weight: 650;
+}
+
+.planner-message.is-success {
+    color: #246a36;
+    font-weight: 650;
+}
+
+/* Map markers */
+.city-dot div {
+    width: 7px;
+    height: 7px;
+    box-sizing: border-box;
+    background: #fff;
+    border: 2px solid #101820;
+    border-radius: 999px;
+}
+
+.city-label {
+    color: #111;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    font-size: 14px;
+    font-weight: 700;
+    text-shadow:
+        2px 2px 0 #fff,
+        -2px -2px 0 #fff,
+        2px -2px 0 #fff,
+        -2px 2px 0 #fff,
+        0 2px 0 #fff,
+        0 -2px 0 #fff;
+}
+
+.leaflet-tooltip-right.city-label::before {
+    display: none;
+}
+
+.data-symbol {
+    display: grid;
+    place-items: center;
+    width: 18px !important;
+    height: 18px !important;
+    color: #15202b;
+    background: rgba(255, 255, 255, 0.94);
+    border: 2px solid #15202b;
+    border-radius: 999px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+    font-size: 10px;
+    line-height: 1;
+}
+
+.route-stop-icon {
+    display: grid;
+    place-items: center;
+    width: 28px !important;
+    height: 28px !important;
+    color: #fff;
+    background: var(--accent);
+    border: 2px solid #fff;
+    border-radius: 999px;
+    box-shadow:
+        0 0 0 2px var(--accent-dark),
+        0 2px 7px rgba(0, 0, 0, 0.35);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.route-stop-icon.is-selected {
+    background: #245bb6;
+    box-shadow:
+        0 0 0 3px #173a76,
+        0 2px 8px rgba(0, 0, 0, 0.38);
+}
+
+.data-popup {
+    min-width: 190px;
+    line-height: 1.35;
+}
+
+.data-popup__title {
+    margin-bottom: 2px;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.data-popup__meta {
+    margin-bottom: 6px;
+    color: #5c6670;
+    font-size: 11px;
+}
+
+.data-popup__score {
+    margin: 6px 0;
+    font-weight: 750;
+}
+
+.data-popup__note {
+    margin-top: 6px;
+    padding-top: 5px;
+    color: #5c6670;
+    border-top: 1px solid #ddd;
+    font-size: 11px;
+}
+
+.leaflet-pm-toolbar .button-container a {
+    background-color: rgba(255, 255, 255, 0.96);
+}
+
+@media (max-width: 680px) {
+    .overlay-picker {
+        width: min(240px, calc(100vw - 26px));
+        max-height: 43vh;
+    }
+
+    .planner-panel {
+        width: min(320px, calc(100vw - 26px));
+        max-height: 48vh;
+    }
+
+    .leaflet-control-zoom {
+        display: none;
+    }
+}
+
+.overlay-picker__load {
+    width: 100%;
+    min-height: 31px;
+    margin-top: 7px;
+    padding: 5px 8px;
+    color: var(--text);
+    background: #fff;
+    border: 1px solid rgba(18, 27, 39, 0.25);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.overlay-picker__load:hover {
+    background: #f4f6f8;
+}
+
+.data-popup__properties {
+    width: 100%;
+    margin-top: 7px;
+    border-collapse: collapse;
+    font-size: 11px;
+}
+
+.data-popup__properties th,
+.data-popup__properties td {
+    padding: 3px 4px;
+    border-top: 1px solid #ddd;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+.data-popup__properties th {
+    width: 42%;
+    font-weight: 700;
+}

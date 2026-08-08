@@ -1,0 +1,72 @@
+[
+  {
+    "name": "Poipet–Aranyaprathet",
+    "countries": "Cambodia / Thailand",
+    "lat": 13.6617,
+    "lon": 102.5493,
+    "category": "border",
+    "summary": "Major overland crossing; verify opening hours and entry rules."
+  },
+  {
+    "name": "Nong Khai–Vientiane Friendship Bridge",
+    "countries": "Thailand / Laos",
+    "lat": 17.878,
+    "lon": 102.715,
+    "category": "border",
+    "summary": "Road and rail border; verify current procedures."
+  },
+  {
+    "name": "Padang Besar",
+    "countries": "Thailand / Malaysia",
+    "lat": 6.6621,
+    "lon": 100.3214,
+    "category": "border",
+    "summary": "Road and rail crossing."
+  },
+  {
+    "name": "Woodlands Causeway",
+    "countries": "Malaysia / Singapore",
+    "lat": 1.4558,
+    "lon": 103.7683,
+    "category": "border",
+    "summary": "Busy road crossing; allow queue time."
+  },
+  {
+    "name": "Second Link",
+    "countries": "Malaysia / Singapore",
+    "lat": 1.3506,
+    "lon": 103.6336,
+    "category": "border"
+  },
+  {
+    "name": "Moc Bai–Bavet",
+    "countries": "Vietnam / Cambodia",
+    "lat": 11.0819,
+    "lon": 106.1549,
+    "category": "border",
+    "summary": "Common Ho Chi Minh City–Phnom Penh route."
+  },
+  {
+    "name": "Lao Bao–Dansavan",
+    "countries": "Vietnam / Laos",
+    "lat": 16.6264,
+    "lon": 106.5974,
+    "category": "border"
+  },
+  {
+    "name": "Mae Sai–Tachileik",
+    "countries": "Thailand / Myanmar",
+    "lat": 20.4427,
+    "lon": 99.8834,
+    "category": "border",
+    "summary": "Status can change; verify official advice before travel."
+  },
+  {
+    "name": "Mae Sot–Myawaddy",
+    "countries": "Thailand / Myanmar",
+    "lat": 16.694,
+    "lon": 98.518,
+    "category": "border",
+    "summary": "Status can change; verify official advice before travel."
+  }
+]

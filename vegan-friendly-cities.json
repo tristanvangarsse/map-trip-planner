@@ -1,0 +1,191 @@
+[
+  {
+    "name": "Chiang Mai",
+    "country": "Thailand",
+    "lat": 18.7883,
+    "lon": 98.9853,
+    "score": 5,
+    "summary": "Large plant-based scene and many vegetarian Thai options.",
+    "planningNote": "Starter rating; verify current venues before booking."
+  },
+  {
+    "name": "Bangkok",
+    "country": "Thailand",
+    "lat": 13.7563,
+    "lon": 100.5018,
+    "score": 5,
+    "summary": "Very broad choice, including Thai, international and fully vegan venues.",
+    "planningNote": "Starter rating; verify current venues before booking."
+  },
+  {
+    "name": "Phuket",
+    "country": "Thailand",
+    "lat": 7.8804,
+    "lon": 98.3923,
+    "score": 4,
+    "summary": "Good choice in major beach areas and Phuket Town.",
+    "planningNote": "Availability varies strongly by district."
+  },
+  {
+    "name": "Singapore",
+    "country": "Singapore",
+    "lat": 1.3521,
+    "lon": 103.8198,
+    "score": 5,
+    "summary": "Dense mix of vegetarian food courts, Indian food and modern vegan dining.",
+    "planningNote": "Starter rating; check opening hours and prices."
+  },
+  {
+    "name": "Kuala Lumpur",
+    "country": "Malaysia",
+    "lat": 3.139,
+    "lon": 101.6869,
+    "score": 5,
+    "summary": "Strong Indian, Chinese vegetarian and modern plant-based options.",
+    "planningNote": "Starter rating; verify current venues before booking."
+  },
+  {
+    "name": "George Town",
+    "country": "Malaysia",
+    "lat": 5.4141,
+    "lon": 100.3288,
+    "score": 4,
+    "summary": "Good vegetarian heritage-food options and a compact centre.",
+    "planningNote": "Ask about egg, dairy, fish sauce and shrimp paste."
+  },
+  {
+    "name": "Ho Chi Minh City",
+    "country": "Vietnam",
+    "lat": 10.8231,
+    "lon": 106.6297,
+    "score": 5,
+    "summary": "Many chay restaurants plus a growing modern vegan scene.",
+    "planningNote": "Chay can be vegan or vegetarian; confirm ingredients."
+  },
+  {
+    "name": "Hanoi",
+    "country": "Vietnam",
+    "lat": 21.0278,
+    "lon": 105.8342,
+    "score": 4,
+    "summary": "Numerous chay restaurants, especially around central districts.",
+    "planningNote": "Chay can be vegan or vegetarian; confirm ingredients."
+  },
+  {
+    "name": "Da Nang",
+    "country": "Vietnam",
+    "lat": 16.0544,
+    "lon": 108.2022,
+    "score": 4,
+    "summary": "Good value chay restaurants and an easy-to-navigate centre.",
+    "planningNote": "Starter rating; verify current venues before booking."
+  },
+  {
+    "name": "Hoi An",
+    "country": "Vietnam",
+    "lat": 15.8801,
+    "lon": 108.338,
+    "score": 4,
+    "summary": "Tourist-oriented restaurants make dietary requests relatively easy.",
+    "planningNote": "Ask explicitly about fish sauce and egg."
+  },
+  {
+    "name": "Ubud",
+    "country": "Indonesia",
+    "lat": -8.5069,
+    "lon": 115.2625,
+    "score": 5,
+    "summary": "High concentration of plant-based cafés and wellness-oriented food.",
+    "planningNote": "Often pricier than local warungs."
+  },
+  {
+    "name": "Canggu",
+    "country": "Indonesia",
+    "lat": -8.6478,
+    "lon": 115.1385,
+    "score": 5,
+    "summary": "Many modern vegan and vegetarian cafés.",
+    "planningNote": "Traffic and prices can be significant trip factors."
+  },
+  {
+    "name": "Yogyakarta",
+    "country": "Indonesia",
+    "lat": -7.7956,
+    "lon": 110.3695,
+    "score": 4,
+    "summary": "Good local vegetarian choices and affordable student-city dining.",
+    "planningNote": "Ask about shrimp paste, egg and dairy."
+  },
+  {
+    "name": "Jakarta",
+    "country": "Indonesia",
+    "lat": -6.2088,
+    "lon": 106.8456,
+    "score": 4,
+    "summary": "Large overall choice, but venues are spread across a very large city.",
+    "planningNote": "Plan around neighbourhood and travel time."
+  },
+  {
+    "name": "Manila",
+    "country": "Philippines",
+    "lat": 14.5995,
+    "lon": 120.9842,
+    "score": 4,
+    "summary": "Growing vegan scene, especially in central business and lifestyle districts.",
+    "planningNote": "Venues are dispersed; transport time matters."
+  },
+  {
+    "name": "Cebu City",
+    "country": "Philippines",
+    "lat": 10.3157,
+    "lon": 123.8854,
+    "score": 3,
+    "summary": "A useful base with a smaller but workable plant-based selection.",
+    "planningNote": "Research neighbourhoods before choosing accommodation."
+  },
+  {
+    "name": "Phnom Penh",
+    "country": "Cambodia",
+    "lat": 11.5564,
+    "lon": 104.9282,
+    "score": 4,
+    "summary": "Good international choice and several dedicated vegetarian venues.",
+    "planningNote": "Ask about fish sauce, egg and dairy."
+  },
+  {
+    "name": "Siem Reap",
+    "country": "Cambodia",
+    "lat": 13.3671,
+    "lon": 103.8448,
+    "score": 4,
+    "summary": "Tourism infrastructure supports a good range of dietary options.",
+    "planningNote": "Central areas are easiest without private transport."
+  },
+  {
+    "name": "Luang Prabang",
+    "country": "Laos",
+    "lat": 19.8833,
+    "lon": 102.133,
+    "score": 3,
+    "summary": "Some vegetarian-friendly cafés and guesthouses in a compact centre.",
+    "planningNote": "Choice is more limited than in regional capitals."
+  },
+  {
+    "name": "Vientiane",
+    "country": "Laos",
+    "lat": 17.9757,
+    "lon": 102.6331,
+    "score": 3,
+    "summary": "A modest selection of vegetarian and international restaurants.",
+    "planningNote": "Verify current opening hours."
+  },
+  {
+    "name": "Yangon",
+    "country": "Myanmar",
+    "lat": 16.8409,
+    "lon": 96.1735,
+    "score": 3,
+    "summary": "Traditional vegetarian options exist, but trip conditions require separate checking.",
+    "planningNote": "Verify current travel advisories and venue availability."
+  }
+]

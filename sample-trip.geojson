@@ -1,0 +1,67 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "application": "Southeast Asia trip planner",
+    "scope": "workspace",
+    "routeDistanceIsStraightLine": true
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "route-stop",
+        "id": "sample-bangkok",
+        "order": 1,
+        "name": "Bangkok",
+        "notes": "Example stop; replace with your own plans."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [100.5018, 13.7563]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "route-stop",
+        "id": "sample-chiang-mai",
+        "order": 2,
+        "name": "Chiang Mai",
+        "notes": "Example stop; drag it or change its order in the planner."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [98.9853, 18.7883]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "route-stop",
+        "id": "sample-luang-prabang",
+        "order": 3,
+        "name": "Luang Prabang",
+        "notes": "Example stop; exported routes preserve these notes."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [102.133, 19.8833]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "route-line",
+        "name": "Trip route"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [100.5018, 13.7563],
+          [98.9853, 18.7883],
+          [102.133, 19.8833]
+        ]
+      }
+    }
+  ]
+}
