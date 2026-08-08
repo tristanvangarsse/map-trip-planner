@@ -1,59 +1,69 @@
 # Southeast Asia Map & Trip Planner
 
-An interactive Leaflet-based map for exploring Southeast Asia and planning trips across the region.
+A static Leaflet website for exploring Southeast Asia, comparing travel-related reference data, and sketching an itinerary directly in the browser.
 
 **Live website:** https://southeast-asia-map.vangarsse.com
 
-The project combines reference datasets with a lightweight browser-based trip planner. You can explore cities and travel-related points of interest, display geographic overlays, draw routes and shapes directly on the map, and save your work as GeoJSON.
-
 ## Features
 
-### Reference overlays
+### Selectable map overlays
 
-The map includes a selector in the top-right corner that displays one reference dataset at a time.
-
-Included datasets currently cover:
+The top-right **Map data** control shows one optional reference layer at a time:
 
 - major cities;
 - vegan-friendly city shortlist;
-- airports;
-- railway hubs;
+- major airports;
+- rail hubs;
 - ferry hubs;
 - land border crossings;
 - national parks and nature locations;
+- population density by country;
 - Southeast Asian country polygons.
 
-Point datasets are stored as JSON, while geographic regions and other complex geometry use GeoJSON.
+You can also load a local JSON or GeoJSON file temporarily without editing the project.
+
+### Population-density choropleth
+
+The **Population density (2023)** overlay colours each Southeast Asian country according to the number of people per square kilometre of land area.
+
+- Hover over a country to see its value.
+- Click a country for a popup with the indicator, year, and source.
+- A legend appears only while this overlay is active.
+- The layer is country-level, not a detailed settlement or grid-level heatmap.
+
+The values are stored in:
+
+```text
+data/statistics/population-density-2023.json
+```
+
+Source: World Bank Open Data indicator `EN.POP.DNST` — Population density (people per sq. km of land area):
+
+https://data.worldbank.org/indicator/EN.POP.DNST
 
 ### Trip planner
 
-The built-in trip planner lets you create your own itinerary directly in the browser.
-
-You can:
+The bottom-right trip planner starts collapsed. Expand it to:
 
 - add numbered route stops by clicking the map;
 - drag stops to reposition them;
 - rename stops and add notes;
 - reorder or remove stops;
-- automatically connect stops with a route line;
-- draw additional markers, lines, rectangles, and polygons;
-- edit or delete previously drawn geometry;
+- connect stops automatically with a route line;
+- draw extra markers, lines, rectangles, and polygons;
+- edit or delete drawn geometry;
 - import GeoJSON;
-- export only your route or your complete workspace as GeoJSON.
+- export only the route or the complete workspace as GeoJSON.
 
-The trip planner starts collapsed to keep the map interface uncluttered.
+The route is a straight-line itinerary. It does not calculate road, rail, ferry, or flight paths.
 
-Your workspace is also saved automatically in the browser, so refreshing the page does not immediately remove your planning data.
-
-> The route line represents a straight-line itinerary between stops. It does not currently calculate actual road, railway, ferry, or flight routes.
+The workspace is automatically saved in the browser using `localStorage`.
 
 ## Run locally
 
-The website loads JSON and GeoJSON files using `fetch()`, so it should be served through a local web server instead of opening `index.html` directly with `file://`.
+The site loads local datasets through `fetch()`, so serve the project directory instead of opening `index.html` directly with `file://`.
 
 ### Python
-
-If Python is installed:
 
 ```bash
 python3 -m http.server 8000
@@ -67,66 +77,67 @@ http://localhost:8000
 
 ### Node / npm
 
-If you prefer Node:
-
 ```bash
 npx serve .
 ```
 
-Open the localhost URL shown in the terminal.
+Open the localhost address printed in the terminal.
 
-No build process is required. The website itself is plain HTML, CSS, and JavaScript.
+There is no build step. The project is plain HTML, CSS, JavaScript, JSON, and GeoJSON.
 
 ## Project structure
 
-The main files are:
-
 ```text
-index.html
-styles.css
-app.js
-
-*.json
-*.geojson
-sample-trip.geojson
+.
+├── index.html
+├── README.md
+├── .gitignore
+├── .nojekyll
+├── assets
+│   ├── css
+│   │   └── styles.css
+│   └── js
+│       └── app.js
+└── data
+    ├── README.md
+    ├── points
+    │   ├── cities.json
+    │   ├── ferry-hubs.json
+    │   ├── land-border-crossings.json
+    │   ├── major-airports.json
+    │   ├── national-parks.json
+    │   ├── rail-hubs.json
+    │   └── vegan-friendly-cities.json
+    ├── regions
+    │   └── southeast-asia-countries.geojson
+    ├── routes
+    │   └── sample-trip.geojson
+    └── statistics
+        └── population-density-2023.json
 ```
 
-### `index.html`
+### Root files
 
-Contains the page structure and external Leaflet / mapping dependencies.
+- `index.html` loads Leaflet, Leaflet-Geoman, the stylesheet, and the application script.
+- `README.md` documents the project.
+- `.nojekyll` keeps GitHub Pages from applying Jekyll processing.
+- `.gitignore` excludes common local operating-system files.
 
-### `styles.css`
+### `assets/`
 
-Contains the map UI, controls, marker styles, planner styling, and responsive layout.
+- `assets/css/styles.css` contains the map controls, marker styles, planner UI, popups, and population-density legend.
+- `assets/js/app.js` contains map setup, overlay definitions, data loading, route editing, drawing tools, import/export, and browser saving.
 
-### `app.js`
+### `data/`
 
-Contains most of the application logic, including:
+- `data/points/` contains coordinate-based JSON datasets.
+- `data/regions/` contains polygon or other geographic boundary datasets.
+- `data/statistics/` contains indicator values joined to geographic features by an identifier such as ISO3.
+- `data/routes/` contains example or saved route GeoJSON files.
 
-- Leaflet map setup;
-- reference overlays;
-- dataset loading;
-- marker rendering;
-- country polygons;
-- trip planner;
-- route stops;
-- drawing and editing;
-- GeoJSON import/export;
-- local browser storage.
+## Adding a point overlay
 
-### JSON files
-
-Used primarily for point-based datasets such as cities, airports, parks, and transport hubs.
-
-### GeoJSON files
-
-Used for polygons, routes, boundaries, lines, or datasets containing multiple geometry types.
-
-## Adding a point dataset
-
-Create a JSON file containing objects with numeric latitude and longitude values.
-
-Example:
+Create a JSON array in `data/points/` with numeric latitude and longitude values:
 
 ```json
 [
@@ -140,38 +151,20 @@ Example:
 ]
 ```
 
-Then register the dataset in `overlayDefinitions` near the top of `app.js`:
+Register it in `overlayDefinitions` near the top of `assets/js/app.js`:
 
 ```js
 {
     id: "example-places",
     name: "Example places",
     type: "points",
-    file: "example-places.json",
+    file: "data/points/example-places.json",
     symbol: "●",
     description: "A short explanation shown under the selector.",
 }
 ```
 
-The `symbol` property is optional.
-
-Without a symbol, the map can render the feature as a regular circle marker.
-
-Some datasets also use special appearances:
-
-```js
-appearance: "city"
-```
-
-for city-style labels, or:
-
-```js
-appearance: "score"
-```
-
-for markers whose size is based on a numeric `score` property.
-
-Supported coordinate property combinations include:
+Supported coordinate combinations are:
 
 ```text
 lat / lon
@@ -179,40 +172,32 @@ latitude / longitude
 lat / lng
 ```
 
-## Loading a dataset without editing the code
+`symbol` is optional. Without it, points are rendered as circle markers.
 
-For quick experiments, use:
+Special appearances currently supported by the existing renderer include:
 
-**Load local JSON / GeoJSON…**
+```js
+appearance: "city"
+```
 
-in the map's overlay selector.
+for city-style labels, and:
 
-The selected file is added temporarily as an overlay for the current browser session.
+```js
+appearance: "score"
+```
 
-This is useful for testing new datasets before permanently registering them in `app.js`.
+for circle markers sized using a numeric `score` property.
 
-## Adding a region or GeoJSON dataset
+## Adding a polygon, line, or mixed GeoJSON overlay
 
-GeoJSON is recommended for:
-
-- country or province boundaries;
-- national parks with polygon boundaries;
-- travel regions;
-- routes;
-- railway or road lines;
-- islands;
-- mixed point / line / polygon datasets.
-
-Place the GeoJSON file in the website directory and register it in `overlayDefinitions`.
-
-Example:
+Place the file in `data/regions/` and register it in `overlayDefinitions`:
 
 ```js
 {
     id: "provinces",
     name: "Provinces",
     type: "geojson",
-    file: "provinces.geojson",
+    file: "data/regions/provinces.geojson",
     description: "Administrative level-one boundaries.",
     style: {
         color: "#202b35",
@@ -223,7 +208,7 @@ Example:
 }
 ```
 
-GeoJSON feature labels are read from common properties such as:
+GeoJSON labels are read from common properties including:
 
 ```text
 name
@@ -234,71 +219,69 @@ NAME
 ADMIN
 ```
 
-## GeoJSON route format
+GeoJSON coordinates use longitude first:
 
-A simple route can be represented as a GeoJSON `LineString`:
+```text
+[longitude, latitude]
+```
+
+## Updating the population-density data
+
+Edit:
+
+```text
+data/statistics/population-density-2023.json
+```
+
+Each country record uses an ISO3 code that matches `ISO_A3` in the country GeoJSON:
 
 ```json
 {
-    "type": "FeatureCollection",
-    "features": [
-        {
-            "type": "Feature",
-            "properties": {
-                "name": "Example trip"
-            },
-            "geometry": {
-                "type": "LineString",
-                "coordinates": [
-                    [100.5018, 13.7563],
-                    [98.9853, 18.7883],
-                    [102.1347, 19.8833]
-                ]
-            }
-        }
-    ]
+    "iso3": "THA",
+    "name": "Thailand",
+    "value": 140.35
 }
 ```
 
-Remember that GeoJSON coordinates use:
+When changing to a newer year:
 
-```text
-longitude, latitude
-```
+1. replace the country values;
+2. update the top-level `year` field;
+3. rename the file if desired;
+4. update `POPULATION_DENSITY_FILE` in `assets/js/app.js`;
+5. update the overlay name and description if the displayed year changed.
 
-rather than latitude first.
+The choropleth thresholds and colours are defined in `DENSITY_CLASSES` in `assets/js/app.js`.
+
+## Loading a local dataset
+
+Use **Load local JSON / GeoJSON…** in the top-right control.
+
+A loaded file is available only for the current browser session. To make it permanent, place it in the appropriate `data/` folder and add it to `overlayDefinitions`.
 
 ## Data notes
 
-The included datasets are intended primarily as trip-planning references rather than authoritative or exhaustive sources.
+The bundled datasets are compact planning references, not exhaustive or authoritative travel databases.
 
-In particular:
+- Vegan-friendly city scores are a starter shortlist, not live restaurant counts.
+- Transport and nature datasets contain selected locations only.
+- Country population density does not show variation within a country.
+- Border openings, visa rules, schedules, prices, safety conditions, and venue status can change.
 
-- the vegan-friendly cities dataset is a curated starter shortlist rather than a live count of vegan restaurants;
-- transport datasets are compact reference datasets rather than complete networks;
-- nature and park datasets are not exhaustive;
-- country polygons are intended for visualization and map context;
-- border crossings, transport schedules, visa requirements, prices, opening hours, and travel conditions can change.
+Verify important travel information with current authoritative sources before travelling.
 
-Always verify important travel information with current authoritative sources before travelling.
+## Deployment
 
-## Ideas for future development
+The project can be deployed directly from the repository root with GitHub Pages:
 
-Possible additions include:
+```text
+Branch: main
+Folder: / (root)
+```
 
-- actual road / rail / ferry routing between trip stops;
-- distance and travel-time estimation;
-- accommodation and cost datasets;
-- climate or rainfall overlays by month;
-- visa and entry-information overlays;
-- live OpenStreetMap queries;
-- vegan restaurant counts derived from OpenStreetMap;
-- public transport network data;
-- filtering datasets by country;
-- configurable marker colors and sizes;
-- multiple simultaneously visible reference overlays;
-- shareable trip URLs;
-- cloud or account-based trip saving.
+The custom domain is configured in GitHub Pages settings. Cloudflare can remain the DNS provider or proxy, depending on the domain configuration.
+
+The query strings on the local CSS and JavaScript references in `index.html` are cache-busting version values. Update them after future asset changes when aggressive browser or CDN caching is a concern.
 
 ## Built with
 
@@ -309,8 +292,8 @@ Possible additions include:
 - Leaflet-Geoman
 - GeoJSON
 
-## License
+## License and attribution
 
-Add the project license here if you plan to make the repository publicly reusable.
+Add a code license before presenting the repository as generally reusable.
 
-If third-party geographic datasets are added, make sure their individual licenses and attribution requirements are also documented.
+Keep attribution and usage terms for external map tiles and datasets. The map currently displays Esri attribution, and the population-density dataset records its World Bank source in the data file and interface.

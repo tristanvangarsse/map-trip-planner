@@ -6,7 +6,9 @@
         [29, 142],
     ];
     const STORAGE_KEY = "southeast-asia-trip-workspace-v2";
-    const REGION_FILE = "southeast-asia-countries.geojson";
+    const REGION_FILE = "data/regions/southeast-asia-countries.geojson";
+    const POPULATION_DENSITY_FILE =
+        "data/statistics/population-density-2023.json";
 
     const map = L.map("map", {
         zoomControl: true,
@@ -54,6 +56,7 @@
     const jsonCache = new Map();
     const loadedOverlays = new Map();
     let activeOverlay = null;
+    let activeOverlayControl = null;
     let overlaySelectionSerial = 0;
 
     const overlayDefinitions = [
@@ -61,7 +64,7 @@
             id: "cities",
             name: "Major cities",
             type: "points",
-            file: "cities.json",
+            file: "data/points/cities.json",
             appearance: "city",
             permanentLabels: true,
             description: "Reference city labels from the original map.",
@@ -70,7 +73,7 @@
             id: "vegan-cities",
             name: "Vegan-friendly city shortlist",
             type: "points",
-            file: "vegan-friendly-cities.json",
+            file: "data/points/vegan-friendly-cities.json",
             appearance: "score",
             description:
                 "Starter planning scores, not live restaurant counts. Click a city for notes and verify venues before travel.",
@@ -79,7 +82,7 @@
             id: "airports",
             name: "Major airports",
             type: "points",
-            file: "major-airports.json",
+            file: "data/points/major-airports.json",
             symbol: "✈",
             description:
                 "Major international and regional airport reference points.",
@@ -88,7 +91,7 @@
             id: "rail-hubs",
             name: "Rail hubs",
             type: "points",
-            file: "rail-hubs.json",
+            file: "data/points/rail-hubs.json",
             symbol: "▥",
             description:
                 "Selected intercity and cross-border railway stations.",
@@ -97,7 +100,7 @@
             id: "ferry-hubs",
             name: "Ferry hubs",
             type: "points",
-            file: "ferry-hubs.json",
+            file: "data/points/ferry-hubs.json",
             symbol: "⚓",
             description:
                 "Selected ferry terminals useful for island and cross-border planning.",
@@ -106,7 +109,7 @@
             id: "border-crossings",
             name: "Land border crossings",
             type: "points",
-            file: "land-border-crossings.json",
+            file: "data/points/land-border-crossings.json",
             symbol: "↔",
             description:
                 "Geographic reference only. Opening status, visas and local conditions can change.",
@@ -115,10 +118,19 @@
             id: "parks",
             name: "National parks and nature",
             type: "points",
-            file: "national-parks.json",
+            file: "data/points/national-parks.json",
             symbol: "▲",
             description:
                 "Selected parks and natural areas shown by approximate centre point.",
+        },
+        {
+            id: "population-density",
+            name: "Population density (2023)",
+            type: "population-density",
+            file: POPULATION_DENSITY_FILE,
+            regionFile: REGION_FILE,
+            description:
+                "Country-level people per square kilometre of land area. Hover or click a country for its value; the legend uses a stepped scale.",
         },
         {
             id: "countries",
@@ -335,6 +347,163 @@
         </div>`;
     }
 
+    const DENSITY_CLASSES = [
+        { min: 0, max: 50, label: "Under 50", color: "#ffffcc" },
+        { min: 50, max: 100, label: "50–99", color: "#ffeda0" },
+        { min: 100, max: 150, label: "100–149", color: "#fed976" },
+        { min: 150, max: 300, label: "150–299", color: "#feb24c" },
+        { min: 300, max: 500, label: "300–499", color: "#fd8d3c" },
+        { min: 500, max: 1000, label: "500–999", color: "#e31a1c" },
+        { min: 1000, max: Infinity, label: "1,000+", color: "#800026" },
+    ];
+
+    function densityClassForValue(value) {
+        if (!Number.isFinite(value)) return null;
+        return (
+            DENSITY_CLASSES.find(
+                (item) => value >= item.min && value < item.max,
+            ) || DENSITY_CLASSES.at(-1)
+        );
+    }
+
+    function densityColor(value) {
+        return densityClassForValue(value)?.color || "#d4d9df";
+    }
+
+    function numericDensity(value) {
+        if (value === null || value === undefined || value === "") return NaN;
+        const number = Number(value);
+        return Number.isFinite(number) ? number : NaN;
+    }
+
+    function formatDensity(value) {
+        if (!Number.isFinite(value)) return "No data";
+        return new Intl.NumberFormat("en", {
+            maximumFractionDigits: value >= 1000 ? 0 : 1,
+        }).format(value);
+    }
+
+    function buildPopulationDensityPopup(record, dataset) {
+        const name = escapeHtml(record?.name || "Country");
+        const value = numericDensity(record?.value);
+        const year = escapeHtml(dataset.year || "");
+        const indicator = escapeHtml(dataset.indicator || "");
+        const unit = escapeHtml(
+            dataset.unit || "people per sq. km of land area",
+        );
+        const source = escapeHtml(dataset.source || "Source");
+        const sourceUrl = escapeHtml(dataset.sourceUrl || "");
+
+        return `<div class="data-popup density-popup">
+            <div class="data-popup__title">${name}</div>
+            <div class="density-popup__value">${formatDensity(value)}</div>
+            <div class="data-popup__meta">${unit}${year ? ` · ${year}` : ""}</div>
+            ${indicator ? `<div class="density-popup__indicator">Indicator: ${indicator}</div>` : ""}
+            ${sourceUrl ? `<a class="density-popup__source" href="${sourceUrl}" target="_blank" rel="noopener noreferrer">${source}</a>` : `<div>${source}</div>`}
+        </div>`;
+    }
+
+    function createPopulationDensityLegend(dataset) {
+        const control = L.control({ position: "bottomleft" });
+        control.onAdd = () => {
+            const container = L.DomUtil.create("div", "density-legend");
+            L.DomEvent.disableClickPropagation(container);
+            L.DomEvent.disableScrollPropagation(container);
+
+            const rows = DENSITY_CLASSES.map(
+                (item) => `<div class="density-legend__row">
+                    <span class="density-legend__swatch" style="background:${item.color}"></span>
+                    <span>${item.label}</span>
+                </div>`,
+            ).join("");
+            const sourceUrl = escapeHtml(dataset.sourceUrl || "");
+            const source = escapeHtml(dataset.source || "World Bank Open Data");
+
+            container.innerHTML = `
+                <div class="density-legend__title">Population density</div>
+                <div class="density-legend__unit">People/km² · ${escapeHtml(dataset.year || "")}</div>
+                ${rows}
+                ${sourceUrl ? `<a class="density-legend__source" href="${sourceUrl}" target="_blank" rel="noopener noreferrer">Source: ${source}</a>` : ""}
+            `;
+            return container;
+        };
+        return control;
+    }
+
+    function renderPopulationDensityOverlay(dataset, regions, definition) {
+        if (!Array.isArray(dataset?.countries)) {
+            throw new Error(`${definition.file} must contain a countries array`);
+        }
+
+        const byIso = new Map(
+            dataset.countries.map((record) => [
+                String(record.iso3 || "").toUpperCase(),
+                record,
+            ]),
+        );
+
+        const styleForFeature = (feature) => {
+            const iso = String(
+                feature?.properties?.ISO_A3 ||
+                    feature?.properties?.ADM0_A3 ||
+                    "",
+            ).toUpperCase();
+            const value = numericDensity(byIso.get(iso)?.value);
+            return {
+                color: "#3d4650",
+                weight: 1.1,
+                opacity: 0.9,
+                fillColor: densityColor(value),
+                fillOpacity: Number.isFinite(value) ? 0.82 : 0.35,
+            };
+        };
+
+        const layer = L.geoJSON(regions, {
+            pane: "dataOverlay",
+            style: styleForFeature,
+            onEachFeature(feature, featureLayer) {
+                featureLayer.options.pmIgnore = true;
+                const iso = String(
+                    feature?.properties?.ISO_A3 ||
+                        feature?.properties?.ADM0_A3 ||
+                        "",
+                ).toUpperCase();
+                const record = byIso.get(iso) || {
+                    name: getFeatureName(feature),
+                    value: null,
+                };
+                const value = numericDensity(record.value);
+                const tooltipValue = Number.isFinite(value)
+                    ? `${formatDensity(value)} people/km²`
+                    : "No data";
+
+                featureLayer.bindTooltip(
+                    `${record.name || getFeatureName(feature)}: ${tooltipValue}`,
+                    { sticky: true },
+                );
+                featureLayer.bindPopup(
+                    buildPopulationDensityPopup(record, dataset),
+                );
+                featureLayer.on({
+                    mouseover() {
+                        featureLayer.setStyle({
+                            color: "#111820",
+                            weight: 2.2,
+                            fillOpacity: Number.isFinite(value) ? 0.94 : 0.45,
+                        });
+                        featureLayer.bringToFront();
+                    },
+                    mouseout() {
+                        featureLayer.setStyle(styleForFeature(feature));
+                    },
+                });
+            },
+        });
+
+        layer._mapDataControl = createPopulationDensityLegend(dataset);
+        return layer;
+    }
+
     function renderPointOverlay(items, definition) {
         if (!Array.isArray(items)) {
             throw new Error(`${definition.file} must contain a JSON array`);
@@ -445,6 +614,9 @@
             layer = renderPointOverlay(data, definition);
         } else if (definition.type === "geojson") {
             layer = renderGeoJsonOverlay(data, definition);
+        } else if (definition.type === "population-density") {
+            const regions = await loadJson(definition.regionFile);
+            layer = renderPopulationDensityOverlay(data, regions, definition);
         } else {
             throw new Error(`Unknown overlay type: ${definition.type}`);
         }
@@ -459,6 +631,10 @@
         if (activeOverlay) {
             map.removeLayer(activeOverlay);
             activeOverlay = null;
+        }
+        if (activeOverlayControl) {
+            map.removeControl(activeOverlayControl);
+            activeOverlayControl = null;
         }
 
         ui.error.textContent = "";
@@ -476,6 +652,10 @@
             if (serial !== overlaySelectionSerial) return;
             layer.addTo(map);
             activeOverlay = layer;
+            if (layer._mapDataControl) {
+                layer._mapDataControl.addTo(map);
+                activeOverlayControl = layer._mapDataControl;
+            }
             ui.description.textContent = definition.description || "";
         } catch (error) {
             console.error(error);

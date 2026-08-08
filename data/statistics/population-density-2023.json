@@ -1,0 +1,23 @@
+{
+  "indicator": "EN.POP.DNST",
+  "indicatorName": "Population density",
+  "unit": "people per sq. km of land area",
+  "year": 2023,
+  "source": "World Bank Open Data",
+  "sourceUrl": "https://data.worldbank.org/indicator/EN.POP.DNST",
+  "methodologyUrl": "https://databank.worldbank.org/metadataglossary/world-development-indicators/series/EN.POP.DNST",
+  "note": "Country-level values. Population density is midyear population divided by land area in square kilometres.",
+  "countries": [
+    { "iso3": "BRN", "name": "Brunei", "value": 87.09 },
+    { "iso3": "KHM", "name": "Cambodia", "value": 98.71 },
+    { "iso3": "IDN", "name": "Indonesia", "value": 148.58 },
+    { "iso3": "LAO", "name": "Laos", "value": 33.21 },
+    { "iso3": "MYS", "name": "Malaysia", "value": 106.91 },
+    { "iso3": "MMR", "name": "Myanmar", "value": 82.94 },
+    { "iso3": "PHL", "name": "Philippines", "value": 385.32 },
+    { "iso3": "SGP", "name": "Singapore", "value": 8241.85 },
+    { "iso3": "THA", "name": "Thailand", "value": 140.35 },
+    { "iso3": "TLS", "name": "Timor-Leste", "value": 93.09 },
+    { "iso3": "VNM", "name": "Vietnam", "value": 320.18 }
+  ]
+}
